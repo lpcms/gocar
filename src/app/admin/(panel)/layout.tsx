@@ -1,7 +1,6 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { verifySession } from '@/lib/auth';
+import { currentAdminId } from '@/lib/admin-guard';
 import { AdminSidebar } from '@/app/admin/admin-sidebar';
 import { ToastProvider } from '@/app/admin/admin-toast';
 import '../admin.css';
@@ -9,11 +8,13 @@ import '../admin.css';
 /**
  * Guarded admin shell: session check (server) + client-side sidebar
  * with a URL-driven active highlight.
+ *
+ * Through the same resolver the API routes use, so the pages and the endpoints
+ * agree on what a valid session is - including that the account behind it
+ * still exists.
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const store = await cookies();
-  const token = store.get('gocar_admin')?.value ?? '';
-  if (verifySession(token) === null) {
+  if ((await currentAdminId()) === null) {
     redirect('/admin/login');
   }
   return (

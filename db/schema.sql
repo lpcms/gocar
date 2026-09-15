@@ -234,7 +234,7 @@ CREATE TABLE media (
 );
 
 /**
- * Key-value settings (default_locale, ga_id, gtm_id, recaptcha keys,
+ * Key-value settings (default_locale, ga_id, gtm_id, fb_pixel_id, recaptcha keys,
  * telegram_bot_token, telegram_chat_id, lockout_attempts, lockout_minutes,
  * image_quality, image_max_width, robots_txt, seo defaults...).
  */

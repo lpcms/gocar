@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processLead } from '@/lib/leads';
 import { verifyRecaptcha, RECAPTCHA_FORMS } from '@/lib/recaptcha';
+import { clientIp } from '@/lib/client-ip';
 
 /**
  * Lead intake endpoint (Next runtime).
@@ -18,8 +19,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = payload as Record<string, unknown>;
 
   const token = typeof body.recaptcha_token === 'string' ? body.recaptcha_token : '';
-  const forwarded = req.headers.get('x-forwarded-for') ?? '';
-  const ip = forwarded.split(',')[0]?.trim() ?? '';
+  /**
+   * Through the shared resolver: the first entry of `x-forwarded-for` is
+   * written by the client, and handing Google an address the visitor made up
+   * makes the `remoteip` half of the check worthless.
+   */
+  const resolved = clientIp(req.headers);
+  const ip = resolved === 'local' ? '' : resolved;
   const check = await verifyRecaptcha(token, ip, RECAPTCHA_FORMS);
   if (!check.ok) {
     /**
