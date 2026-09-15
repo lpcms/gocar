@@ -1,0 +1,23 @@
+/** Design tokens extracted from the Framer render by scripts/spec-tokens.mjs */
+:root {
+  --font-sans: Inter, Arial, sans-serif;
+  --token-4ba3b38d-f0e9-4031-bcf7-e3252a939999: #fff;
+  --token-9ee00783-8f3b-46bf-8017-52e27d21d43c: #f8f8f8;
+  --token-bba30032-041f-4af5-b886-74ce396683a9: #7a7a7a;
+  --token-932a71f5-0629-44d7-81bf-ee4e6b1506fb: #222;
+  --token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd: #fd3b3b;
+  --radius-10px: 10px;
+  --radius-100: 100%;
+  --radius-32px: 32px;
+  --radius-30px: 30px;
+  --radius-11px: 11px;
+  --radius-100px: 100px;
+  --radius-9999px: 9999px;
+  --radius-2px: 2px;
+  --shadow-1: rgb(0, 0, 0) 0px 0px 0px 1px inset;
+  --shadow-2: rgb(128, 128, 128) 0px 0px 5px 0px;
+  --shadow-3: rgba(0, 0, 0, 0.1) 4px 4px 10px 0px;
+  --shadow-4: rgba(0, 0, 0, 0.17) 0px 0.602187px 1.56569px -1.5px, rgba(0, 0, 0, 0.14) 0px 2.28853px 5.95019px -3px, rgba(0, 0, 0, 0.02) 0px 10px 26px -4.5px;
+  --shadow-5: rgba(0, 0, 0, 0.06) 2px 2px 9px 0px;
+  --shadow-6: rgba(0, 0, 0, 0.05) 0px 0px 40px 0px;
+}

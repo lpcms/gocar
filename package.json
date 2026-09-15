@@ -1,0 +1,53 @@
+{
+  "name": "gocar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GoCar - car rental website for Uzhhorod with an admin panel, online booking and Telegram notifications.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "node ./server.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "check": "node scripts/check-all.mjs",
+    "check:imports": "node scripts/check-imports.mjs",
+    "check:strict": "node scripts/check-strict.mjs",
+    "prebuild": "node scripts/check-imports.mjs && node scripts/check-strict.mjs",
+    "db:init": "node scripts/init-db.mjs",
+    "db:backup": "node scripts/backup-db.mjs",
+    "db:template": "node scripts/make-template-db.mjs",
+    "admin:create": "node scripts/create-admin.mjs",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "next": "~15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.2.4",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "~15.5.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.20.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
+  }
+}

@@ -1,0 +1,241 @@
+/**
+ * Admin design system: minimal modern look, brand red accent.
+ */
+:root {
+  --a-red: #fd3b3b;
+  --a-bg: #f6f7f9;
+  --a-card: #ffffff;
+  --a-text: #17181c;
+  --a-muted: #7a7f89;
+  --a-border: #e6e8ee;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--a-bg);
+  color: var(--a-text);
+  font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+}
+
+.a-shell { display: flex; min-height: 100vh; }
+
+.a-side {
+  width: 232px;
+  background: #17181c;
+  color: #fff;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.a-logo { font-weight: 800; font-size: 19px; margin-bottom: 18px; letter-spacing: 0.2px; }
+.a-logo em { color: var(--a-red); font-style: normal; }
+
+.a-nav { display: grid; gap: 2px; }
+
+.a-nav a {
+  display: block;
+  color: #d6d8de;
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: #2a2b31;
+  font-weight: 400;
+  transition: background 0.15s, color 0.15s;
+}
+
+.a-nav a:hover { background: #34353c; color: #fff; }
+.a-nav a.active { background: #2a2b31; color: #fff; font-weight: 700; }
+
+/**
+ * Logout sits right under the navigation, separated by a fixed gap. It used
+ * to be pushed to the bottom of the sidebar (margin-top: auto), which on a
+ * long page - the cars list, translations - put it a full screen or more
+ * below the menu, so leaving the panel meant scrolling all the way down.
+ */
+.a-side form { margin-top: 50px; }
+
+.a-main { flex: 1; padding: 28px 32px; }
+
+.a-main h1 { font-size: 22px; margin: 0 0 18px; }
+
+.a-card {
+  background: var(--a-card);
+  border: 1px solid var(--a-border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.a-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.a-stat {
+  background: var(--a-card);
+  border: 1px solid var(--a-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  min-width: 180px;
+}
+
+.a-stat .n { font-size: 26px; font-weight: 700; }
+.a-stat .l { color: var(--a-muted); font-size: 13px; margin-top: 2px; }
+
+table.a-table { width: 100%; border-collapse: collapse; background: var(--a-card);
+  border: 1px solid var(--a-border); border-radius: 14px; overflow: hidden; }
+.a-table th { text-align: left; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.4px; color: var(--a-muted); background: #fafbfc;
+  padding: 10px 14px; border-bottom: 1px solid var(--a-border); }
+.a-table td { padding: 10px 14px; border-bottom: 1px solid var(--a-border); }
+.a-table tr:last-child td { border-bottom: 0; }
+
+.a-badge { display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; }
+.a-badge.success { background: #e7f6ec; color: #1d7a3d; }
+.a-badge.failure { background: #fdecec; color: #c02626; }
+.a-badge.blocked { background: #fff3e0; color: #b26a00; }
+
+.a-btn { background: var(--a-red); color: #fff; border: 0; border-radius: 9px;
+  padding: 10px 16px; font-weight: 600; cursor: pointer; font-size: 14px;
+  text-decoration: none; display: inline-block; transition: filter 0.15s; }
+.a-btn:hover { filter: brightness(0.94); }
+.a-btn.ghost { background: #2a2b31; font-weight: 400; }
+.a-btn:disabled { opacity: 0.6; cursor: default; }
+
+.a-input { width: 100%; padding: 11px 13px; border: 1px solid var(--a-border);
+  border-radius: 9px; font-size: 15px; background: #fff; }
+.a-input:focus { outline: 2px solid #fd3b3b33; border-color: var(--a-red); }
+
+.a-filters a { color: var(--a-muted); text-decoration: none; margin-right: 12px; }
+.a-filters a.active { color: var(--a-red); font-weight: 600; }
+
+.login-wrap { min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; background: var(--a-bg); }
+.login-card { background: var(--a-card); border: 1px solid var(--a-border);
+  border-radius: 16px; padding: 34px 32px; width: 380px;
+  box-shadow: 0 12px 40px rgba(20, 22, 30, 0.08); }
+.login-card h1 { font-size: 20px; margin: 0 0 4px; }
+.login-card .sub { color: var(--a-muted); font-size: 13px; margin: 0 0 20px; }
+.login-card .field { margin-bottom: 12px; }
+.login-error { color: #c02626; font-size: 13px; margin-top: 10px; }
+
+/**
+ * Google's required notice under the button, shown only when reCAPTCHA is on.
+ */
+.login-card .login-recaptcha { font-size: 11px; line-height: 15px;
+  margin: 14px 0 0; }
+.login-card .login-recaptcha a { color: inherit; }
+
+/**
+ * Toolbar over CRUD tables: title + primary action on the right.
+ */
+.a-toolbar { display:flex; align-items:center; justify-content:space-between;
+  margin: 0 0 14px; gap: 14px; flex-wrap: wrap; }
+.a-toolbar h1 { margin: 0; }
+.a-toolbar .a-search { flex: 1; max-width: 340px; }
+
+/**
+ * Modal window used by admin CRUD forms.
+ */
+.a-modal-overlay { position: fixed; inset: 0; background: rgba(20, 22, 30, 0.55);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 6vh 16px 16px; z-index: 999; overflow: auto; }
+.a-modal { background: #fff; border-radius: 14px; width: 100%; max-width: 560px;
+  box-shadow: 0 24px 60px rgba(20,22,30,0.25); }
+.a-modal-head { display:flex; justify-content:space-between; align-items:center;
+  padding: 18px 22px; border-bottom: 1px solid var(--a-border); }
+.a-modal-head h2 { margin: 0; font-size: 18px; }
+.a-modal-close { border: 0; background: none; font-size: 26px; cursor: pointer; color: #444; }
+.a-modal-body { padding: 18px 22px; display: grid; gap: 12px; }
+.a-modal-body label { display: grid; gap: 4px; font-size: 13px; color: var(--a-muted); }
+.a-modal-body label b { color: var(--a-text); font-weight: 500; font-size: 14px; }
+
+/**
+ * Simple pagination bar under tables.
+ */
+.a-pager { display:flex; gap:6px; align-items:center; margin-top: 12px; }
+.a-pager a, .a-pager span { display:inline-flex; align-items:center; justify-content:center;
+  min-width: 32px; height: 32px; padding: 0 10px; border-radius: 8px;
+  border: 1px solid var(--a-border); background: #fff; text-decoration: none;
+  color: var(--a-text); font-size: 13px; }
+.a-pager .current { background: var(--a-red); color: #fff; border-color: var(--a-red);
+  font-weight: 600; }
+.a-pager .muted { color: var(--a-muted); border-color: transparent; background: transparent; }
+
+/**
+ * Centered toast stack: fixed-position, 2-second lifespan.
+ */
+.a-toast-stack { position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+  display: grid; gap: 8px; z-index: 9999; pointer-events: none; }
+.a-toast { background: rgba(23, 24, 28, 0.94); color: #fff; padding: 10px 20px;
+  border-radius: 10px; font-size: 14px; font-weight: 500;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  animation: a-toast-in 0.18s ease-out, a-toast-out 0.28s ease-in 1.72s forwards; }
+@keyframes a-toast-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; } }
+@keyframes a-toast-out { to { opacity: 0; transform: translateY(-6px); } }
+
+/**
+ * Row highlight for data-heavy tables (Переводы, Изображения): highlight the
+ * whole row on mouse hover and, identically, while any field inside it is
+ * focused. This makes it clear which record is being edited and reduces the
+ * chance of saving into the wrong row.
+ */
+.a-table tbody tr:hover,
+.a-table tbody tr:focus-within {
+  background: #f0f4ff;
+}
+
+/**
+ * Категории: одна запись занимает две строки — названия со Slug, порядком и
+ * кнопками сверху и SEO-текст под ними. Обе строки живут в своём <tbody>,
+ * поэтому подсветка берёт запись целиком, между строками рамки нет, а
+ * разделитель стоит только под группой. Без этого верх и низ одной карточки
+ * подсвечивались по отдельности и читались как две разные записи.
+ */
+.a-cats .a-cat:hover td,
+.a-cats .a-cat:focus-within td {
+  background: #f0f4ff;
+}
+
+.a-cats .a-cat tr:hover,
+.a-cats .a-cat tr:focus-within {
+  background: transparent;
+}
+
+.a-cats .a-cat tr:first-child td {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/**
+ * Базовое правило гасит рамку у последней строки каждого <tbody>, а их теперь
+ * столько же, сколько записей — разделители пропали бы все. Возвращаем их
+ * всем группам, кроме последней.
+ */
+.a-cats .a-cat:not(:last-child) tr:last-child td {
+  border-bottom: 1px solid var(--a-border);
+}
+
+.a-cats .a-cat:last-child tr:last-child td {
+  border-bottom: 0;
+}
+
+.a-cats .a-cat tr:last-child td {
+  padding-top: 8px;
+}
+
+.a-cats label b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--a-muted);
+}
+
+.a-cats textarea.a-input {
+  resize: vertical;
+}

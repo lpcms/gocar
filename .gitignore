@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# build output
+.next/
+out/
+*.tsbuildinfo
+
+# local configuration and secrets
+.env*
+config.local.json
+
+# live database (the committed starting point is db/gocar.template.db)
+db/gocar.db
+db/gocar.db-*
+db/*.tmp.db
+backups/
+leads.jsonl
+
+# deployment
+.vercel
+
+# logs and OS files
+npm-debug.log*
+.DS_Store
+Thumbs.db

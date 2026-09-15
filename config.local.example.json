@@ -1,0 +1,8 @@
+{
+  "recaptcha": {
+    "admin": false,
+    "forms": false
+  },
+  "telegram_bot_token": "PASTE_YOUR_TOKEN_HERE",
+  "telegram_chat_id": "PASTE_CHAT_ID_HERE"
+}

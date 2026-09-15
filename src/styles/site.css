@@ -1,0 +1,6038 @@
+/**
+ * Chrome of the phase-2 render. Every number here was read off the captured
+ * reference (scripts/diag-chrome.mjs), not estimated: the header is 96px tall
+ * with 30px/50px padding below 1440 and 121px tall with 40px/50px padding from
+ * 1440 up, where the full menu replaces the burger.
+ */
+
+/**
+ * Reset scoped to the new render. The root layout is shared with the admin and
+ * the legacy Framer pages, so nothing here may leak outside .site-shell; the
+ * body margin is dropped only on pages that actually contain the shell.
+ */
+body:has(.site-shell) {
+  margin: 0;
+}
+
+.site-shell *,
+.site-shell *::before,
+.site-shell *::after {
+  box-sizing: border-box;
+}
+
+.site-shell h1,
+.site-shell h2,
+.site-shell h3,
+.site-shell h4,
+.site-shell h5,
+.site-shell h6,
+.site-shell p,
+.site-shell ul,
+.site-shell ol {
+  margin: 0;
+}
+
+.site-shell {
+  font-family: var(--font-sans);
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--token-4ba3b38d-f0e9-4031-bcf7-e3252a939999, #fff);
+}
+
+/**
+ * Visible keyboard focus (plan section 4.2.7). The reference declares no focus
+ * style at all and falls back to the user-agent ring: `outline: auto 1px` in
+ * a near-black, which on the grey card and on its red hover state is barely
+ * readable and disappears entirely on the dark car-detail hero.
+ *
+ * The ring here is two-tone: a halo of `--focus-ring-halo` fills the offset
+ * gap and a `--focus-ring-color` outline is drawn on top of it, so one of the
+ * two contrasts with any surface. A dark section overrides the two custom
+ * properties instead of restyling every control.
+ */
+.site-shell {
+  --focus-ring-color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  --focus-ring-halo: var(--token-4ba3b38d-f0e9-4031-bcf7-e3252a939999, #fff);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+.site-shell :focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: 0 0 0 calc(var(--focus-ring-width) + var(--focus-ring-offset)) var(--focus-ring-halo);
+}
+
+/**
+ * Pointer interaction keeps the reference untouched: `:focus-visible` never
+ * matches a mouse click, and the inherited `:focus` ring of the user agent is
+ * dropped so a click on a card cannot paint a ring the reference never had.
+ */
+.site-shell :focus:not(:focus-visible) {
+  outline: none;
+}
+
+.site-header {
+  position: relative;
+  width: 100%;
+  max-width: 1520px;
+}
+
+.site-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 50px;
+}
+
+.site-logo {
+  margin: 0;
+  font-size: 40px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-logo a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-menu {
+  display: none;
+  gap: 66px;
+  align-items: flex-start;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-menu a {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+/**
+ * Framer draws the English menu as fixed-width boxes with the label centred in
+ * each and 66px between boxes; the widths are hand-set and some labels overflow
+ * their box. Reproducing them is the only way the English row lands on the
+ * reference to the pixel. The Ukrainian labels do not fit those boxes at all -
+ * they collide on the live site - so that locale keeps even 66px gaps around
+ * shrink-wrapped labels, which is the agreed fix rather than a copy of the bug.
+ */
+.site-menu[data-locale='en'] > li:nth-child(1) > a { width: 67px; }
+.site-menu[data-locale='en'] > li:nth-child(2) > a { width: 45px; }
+.site-menu[data-locale='en'] > li:nth-child(3) > a { width: 56px; }
+.site-menu[data-locale='en'] > li:nth-child(4) > a { width: 51px; }
+.site-menu[data-locale='en'] > li:nth-child(5) > a { width: 56px; }
+.site-menu[data-locale='en'] > li:nth-child(6) > a { width: 56px; }
+
+.site-menu[data-locale='en'] > li > a > span {
+  flex: 0 0 auto;
+}
+
+.site-menu a[aria-current='page']::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-menu a:not([aria-current='page'])::after {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.site-menu a:not([aria-current='page']):hover::after {
+  opacity: 1;
+}
+
+/**
+ * The label slides on hover; the caret of the Cars entry is excluded, because
+ * it owns its own transform - the reference draws it as a pseudo-element,
+ * which this rule could never reach.
+ */
+.site-menu a:not([aria-current='page']) span:not(.site-menu-caret) {
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.site-menu a:not([aria-current='page']):hover span:not(.site-menu-caret) {
+  transform: translateX(3px);
+}
+
+/**
+ * Caret of the Cars entry. Hidden below the dropdown's own breakpoint, where
+ * the header collapses into the burger menu. It sits flush against the word
+ * (no margin) because the label overflows its fixed box: any gap makes the
+ * caret read as belonging to the next menu item.
+ */
+.site-menu-caret {
+  display: none;
+}
+
+@media (min-width: 1440px) {
+  .site-menu-caret {
+    display: inline-block;
+    flex: 0 0 auto;
+    align-self: center;
+    width: 12px;
+    height: 12px;
+    background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12'%3E%3Cpath d='M 2 4.5 L 6 8.5 L 10 4.5' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat center;
+    transform: rotate(0deg);
+    transition: transform 0.18s ease;
+  }
+
+  .site-menu-cars[aria-expanded='true'] .site-menu-caret {
+    transform: rotate(180deg);
+  }
+}
+
+/**
+ * The floating car list. Portalled to <body>, so it is positioned in the
+ * viewport and needs its own stacking order rather than the header's.
+ */
+.site-cars-menu {
+  position: fixed;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  min-width: 140px;
+  padding: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  font-family: Inter, 'Inter Placeholder', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.site-cars-menu a {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #222;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.site-cars-menu a:hover {
+  background: rgba(237, 237, 237, 0.8);
+}
+
+.site-cars-menu a:focus-visible {
+  outline: 1px solid rgb(0, 153, 255);
+  outline-offset: -1px;
+}
+
+/** The car whose page is open, marked the way the language picker marks it. */
+.site-cars-menu a[aria-current='page'] {
+  background: rgba(237, 237, 237, 0.6);
+  font-weight: 600;
+}
+
+.site-actions {
+  display: none;
+  align-items: center;
+  gap: 16px;
+}
+
+.site-phone {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 38px;
+  padding: 0 21.64px;
+  border-radius: 100px;
+  margin-right: 4px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.2s ease;
+}
+
+/**
+ * The reference paints the glyph as a white CSS mask - not a disc behind a dark
+ * icon - and lifts it out of the flow against the left edge, so the label stays
+ * centred in the button whatever its length.
+ */
+.site-phone .site-phone-icon {
+  position: absolute;
+  left: 11px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #fff;
+  font-size: 24px;
+}
+
+/**
+ * An svg whose size comes from `width="1em"` is still a shrinkable flex item:
+ * inside its own 24px box the phone glyph was squeezed to 14px wide. The same
+ * `flex: 0 0 auto` the footer icons carry pins it - the footer is exactly why
+ * those icons were always right and this one was not.
+ */
+.site-phone .site-phone-icon svg {
+  flex: 0 0 auto;
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+/**
+ * The 10px indent belongs to the label alone. Applied to every child it also
+ * shifted the absolutely positioned glyph, which then ran into the number:
+ * the reference keeps the glyph at 17px and starts the digits at 31.64px.
+ */
+.site-phone > span:not(.site-phone-icon) {
+  padding-left: 10px;
+}
+
+/**
+ * Hover: the reference scales the whole button, the fill stays the same red.
+ */
+.site-phone:hover {
+  transform: scale(1.1);
+}
+
+.site-phone-divider {
+  width: 1px;
+  height: 27px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-locale {
+  position: relative;
+  width: 140px;
+  height: 41px;
+}
+
+/**
+ * Label of the select, kept for assistive technology only - the reference
+ * shrinks it to a 1x1 clipped box with negative margins, and the visible name
+ * of the locale is painted by .site-locale-face instead.
+ */
+.site-locale-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/**
+ * The face is the control itself now, not an overlay painted over a native
+ * select: it is the button that opens the list, so it takes the whole box.
+ */
+.site-locale-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 140px;
+  padding: 0 10px;
+  border: 0;
+  /** Fully rounded, like the phone button it sits next to. */
+  border-radius: 100px;
+  background: rgba(237, 237, 237, 0.5);
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/**
+ * The open list. Positioned under the control rather than portalled: unlike
+ * the Cars panel it is short and has no ancestor that would clip it.
+ */
+.site-locale-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  width: 140px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  list-style: none;
+}
+
+.site-locale-list button {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #222;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.site-locale-list button:hover,
+.site-locale-list button[data-active='true'] {
+  background: rgba(237, 237, 237, 0.8);
+}
+
+.site-locale-list button[aria-selected='true'] {
+  background: rgba(237, 237, 237, 0.6);
+  font-weight: 600;
+}
+
+.site-locale-name {
+  width: 80px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/**
+ * Closed the chevron points down, open it flips up - the same gesture the Cars
+ * caret makes, so both header controls read alike.
+ */
+.site-locale-caret {
+  display: flex;
+  align-items: center;
+  width: 12px;
+  height: 12px;
+  transform: rotate(0deg);
+  transition: transform 0.18s ease;
+}
+
+/**
+ * Open state. Focus alone is not it: pressing Escape or picking with the
+ * keyboard closes the list while the field keeps focus, and the chevron would
+ * stay up over a closed list. The flag is set by the island instead.
+ */
+.site-locale[data-open='true'] .site-locale-caret {
+  transform: rotate(180deg);
+}
+
+.site-burger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  font-size: 36px;
+  cursor: pointer;
+}
+
+@media (min-width: 1440px) {
+  .site-nav {
+    padding: 40px 50px;
+  }
+
+  .site-menu,
+  .site-actions {
+    display: flex;
+  }
+
+  .site-burger {
+    display: none;
+  }
+
+  /**
+   * The bar is laid out with space-between, so the three blocks have to carry
+   * the widths Framer gave them or the whole row drifts: the logo sits in a
+   * 139px box next to its 126px of text, and the English menu in a 677px box
+   * 16px wider than the items it holds. The Ukrainian menu is shrink-wrapped
+   * with even gaps instead, which is the agreed fix for a row that collides in
+   * the reference.
+   */
+  .site-logo {
+    width: 139px;
+  }
+
+  .site-menu[data-locale='en'] {
+    width: 677px;
+  }
+}
+
+/**
+ * Footer. Reference numbers: a 419px block on a #f8f8f8 ground, 40px of top
+ * padding, three columns of 160/160/280px with a 70px column gap and 40px row
+ * gap, 20px/28px headings, 16px links indented 12px with an 8px icon gap, and
+ * the copyright line 90px below the columns.
+ */
+.site-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 40px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 90px;
+  width: 100%;
+  max-width: 1520px;
+  /**
+   * Symmetric by default. The reference drops the left inset and adds it back
+   * only in its desktop rule, which leaves every width in between hugging the
+   * left edge - and the centred copyright 65px off the middle with it.
+   */
+  padding: 0 50px 46px;
+}
+
+.site-footer-columns {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px 70px;
+  flex-wrap: wrap;
+}
+
+/**
+ * Columns size to their content with a floor, exactly as the reference does:
+ * the Ukrainian "Швидкі посилання" heading widens its column to 194px and
+ * pushes the contacts column onto a second row, which fixed widths would hide.
+ */
+.site-footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  width: auto;
+  min-width: 160px;
+  max-width: 220px;
+}
+
+.site-footer-col-wide {
+  min-width: 280px;
+  max-width: 280px;
+}
+
+.site-footer-heading {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-footer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer-list > li > a,
+.site-footer-address {
+  text-wrap: balance;
+  white-space: pre-wrap;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: 12px;
+  font-size: 16px;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  text-decoration: none;
+}
+
+/**
+ * The reference marks a footer link the same way the header marks one: a red
+ * dot fades in inside the 12px indent, and the label itself never changes
+ * colour. The dot is shown on hover and on the entry of the current page, so
+ * the two states share one rule.
+ */
+.site-footer-list > li > a {
+  position: relative;
+}
+
+.site-footer-list > li > a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.site-footer-list > li > a:hover::before,
+.site-footer-list > li > a[aria-current]::before {
+  opacity: 1;
+}
+
+/**
+ * The address is the one contact that wraps, and a shrinkable icon would give
+ * up its width to the second line: the reference keeps a square 18px glyph and
+ * a 22px line box, so the text column stays 242px wide.
+ */
+/**
+ * The contact glyphs sit 2px below the top of their line in the reference, on
+ * every row including the two-line address - the row aligns to the top, the
+ * icon is nudged, so a taller line does not re-centre it.
+ */
+.site-footer-list > li > a > svg,
+.site-footer-address > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.site-footer-address {
+  line-height: 22px;
+}
+
+/** The reference sets the entry of the current page in weight 500. */
+.site-footer-list > li > a[aria-current] {
+  font-weight: 500;
+}
+
+
+/**
+ * The reference gives this a fixed width and leaves it against the left edge,
+ * so the "centred" line only looks centred at the width it was drawn for: at
+ * 1280 it sits 606px off the middle of the footer. The width becomes a ceiling
+ * and the block centres itself, which is what the text-align already implies.
+ */
+/** The phone is the one contact worth reading first, so it carries weight. */
+.site-footer-list > li > a.site-footer-phone > span {
+  font-weight: 700;
+}
+
+.site-footer .site-footer-copyright {
+  text-wrap: balance;
+  max-width: 1244px;
+  margin-inline: auto;
+  text-align: center;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-shell .site-footer-socials {
+  margin-top: 4px;
+}
+
+.site-footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: 12px;
+  list-style: none;
+}
+
+.site-footer-socials a {
+  display: flex;
+  align-items: center;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  transition: opacity 0.2s ease;
+}
+
+.site-footer-socials a:hover {
+  opacity: 0.7;
+}
+
+/**
+ * Primary button. Reference: 40px tall, 10px/32px padding, 32px radius, label
+ * 16px/22px weight 600 on the accent colour.
+ */
+.site-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 32px;
+  border-radius: 32px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * 404 hero. Reference: a 560px band, 80px/50px padding, a 600x400 illustration
+ * on the left and the text column on the right, over a 374px red disc. The
+ * band shares the 1520px ceiling of the header, so above 1520 it stops growing
+ * with the viewport instead of staying 1440 wide and drifting off centre.
+ */
+.site-404 {
+  position: relative;
+  width: 100%;
+  max-width: 1520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/**
+ * The blurred disc lives in its own clipping box that starts above the hero,
+ * exactly as the reference does: clipping it at the hero edge would cut the
+ * 150px blur into a hard arc across the header.
+ */
+.site-404-disc-clip {
+  position: absolute;
+  top: -118px;
+  left: 0;
+  width: 100%;
+  height: 800px;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/**
+ * Decorative disc. The reference centres it at 46.9% of the viewport width on
+ * every breakpoint except tablet, where it sits at 35.3% and is anchored 121px
+ * above the bottom of the hero instead of below its top.
+ */
+.site-404-disc {
+  position: absolute;
+  top: 202px;
+  left: calc(46.9% - 187px);
+  width: 374px;
+  height: 374px;
+  border-radius: 50%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  opacity: 0.41;
+  filter: blur(150px);
+}
+
+.site-404-inner {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 80px 50px;
+}
+
+.site-404-figure {
+  position: relative;
+  width: 600px;
+  height: 400px;
+}
+
+.site-404-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-404-badge {
+  position: absolute;
+  top: 20px;
+  left: 379px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 176px;
+  min-height: 64px;
+  padding: 20px;
+  border-radius: 20px;
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  box-shadow: rgba(0, 0, 0, 0.1) 4px 4px 10px 0px;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  text-decoration: none;
+  transition: font-weight 0.2s ease;
+}
+
+/**
+ * The badge links to the catalogue. Under the pointer the label drops to a
+ * regular weight - the pill is already the emphasis, so the bold on top of it
+ * reads heavy once it is hovered.
+ */
+.site-404-badge:hover {
+  font-weight: 400;
+}
+
+/**
+ * The pulse marker under the badge: three concentric white discs of 23/16/7px,
+ * as laid out in the reference.
+ */
+.site-404-badge-dot {
+  position: absolute;
+  left: -6px;
+  bottom: -4px;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/**
+ * The marker is three concentric discs that fade outwards - 25%, 50%, solid -
+ * so it reads as a pulse over the photo. Painting them all opaque turns it into
+ * one white blob.
+ */
+.site-404-badge-dot::before,
+.site-404-badge-dot::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.site-404-badge-dot::before {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.site-404-badge-dot::before {
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+}
+
+.site-404-badge-dot::after {
+  left: 8px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+}
+
+.site-404-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 40%;
+  padding-bottom: 40px;
+}
+
+.site-404-code {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The apology line keeps its own size rather than a preset class: the Framer
+ * preset that matches it on desktop is reused elsewhere with a different
+ * line-height, so on tablet it would resolve to `normal` and shift the column.
+ */
+/**
+ * The paragraph follows the column it sits in rather than pinning itself: the
+ * column is centred below the desktop breakpoint and left-aligned above it.
+ * Hard-coding `left` left this line against the left edge while the heading,
+ * the button and the whole column around it were centred.
+ */
+.site-404-message {
+  text-wrap: balance;
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  text-align: inherit;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * Booking banner. Reference: 400px tall card with 30px radius, 58px/80px
+ * padding, a 44/60 white heading and the button below it.
+ */
+.site-cta {
+  width: 100%;
+  max-width: 1520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 50px;
+}
+
+.site-cta-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 46px;
+  width: 100%;
+  min-height: 400px;
+  padding: 58px 80px;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.site-cta-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/**
+ * The banner heading spans 70% of the card on the desktop breakpoint - 826px
+ * of 1180 at 1440, 882 of 1260 at 1920 - and the full card content below it.
+ */
+.site-cta-heading {
+  text-wrap: balance;
+  position: relative;
+  width: 100%;
+  white-space: pre-wrap;
+  color: #fff;
+  text-align: center;
+}
+
+/**
+ * No width of its own: the button is sized by its label everywhere on the
+ * site, so the side spacing reads the same on every page and in every locale.
+ * The reference pinned each button to a number measured on the English text
+ * (200 / 240 / 230), which left identical-looking buttons with side spacing
+ * anywhere between 49 and 76px.
+ */
+.site-cta-card .site-button {
+  position: relative;
+}
+
+
+/**
+ * Chrome and 404 below the desktop breakpoint. The reference stacks the hero
+ * with the text first and the illustration underneath, so the source order
+ * (figure, text) is reversed rather than duplicated.
+ *
+ * Tablet (810-1439): hero 867px tall, 30/50/60 padding, 40px gap, the 200px
+ * code kept, text column 568px.
+ * Mobile (<810): 64px gap, 40/50 padding, code 128/102.4, text column 290px,
+ * illustration 347x233, badge not rendered.
+ */
+@media (max-width: 1439px) {
+  .site-cta-card {
+    min-height: 0;
+    justify-content: center;
+    padding: 58px 50px;
+  }
+
+  .site-404-inner {
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 40px;
+    padding: 30px 50px 60px;
+  }
+
+  .site-404-text {
+    align-items: center;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .site-404-figure {
+    width: 600px;
+    max-width: 100%;
+    height: 351px;
+  }
+
+  /**
+   * Below 1440 the badge sits 25px further right inside the same 600px figure:
+   * 404px from its left edge against 379px on the desktop breakpoint.
+   */
+  .site-404-badge {
+    left: 404px;
+  }
+
+  .site-404-text {
+    width: 80%;
+  }
+
+  /**
+   * The copyright line is 674px of centred text on tablet - a fixed box, not
+   * the width of the footer - and 315px on mobile.
+   */
+  .site-footer-copyright {
+    max-width: 674px;
+  }
+}
+
+@media (max-width: 809px) {
+  .site-404-inner {
+    gap: 64px;
+    padding: 40px 50px;
+  }
+
+  .site-404-text {
+    width: 100%;
+    gap: 40px;
+  }
+
+  .site-404-figure {
+    width: 347px;
+    max-width: none;
+    height: 233px;
+  }
+
+  .site-footer-copyright {
+    max-width: 315px;
+  }
+
+  .site-404-badge {
+    display: none;
+  }
+
+  .site-cta {
+    padding: 0 20px;
+  }
+
+  .site-cta-card {
+    min-height: 0;
+    padding: 58px 30px;
+  }
+
+  .site-footer-inner {
+    padding: 0 20px 46px;
+  }
+
+  .site-footer-columns {
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 32px 70px;
+    width: 100%;
+  }
+
+  /**
+   * Below 810 the columns step down on their own, which is the ladder agreed
+   * with the client on 21.08.2026: three in a row above 810, then two and one,
+   * then one under the other. Each column keeps its floor - 160px for the two
+   * link lists, 280 for the contacts - and grows into whatever its row has
+   * left, so a row holding two columns splits the width between them and a row
+   * holding one takes all of it. That is what keeps a phone from showing a
+   * 160px column against 190px of empty space, and it needs no width-by-width
+   * rule: the wrap decides, the growth fills.
+   */
+  .site-footer-col {
+    flex: 1 1 160px;
+    width: auto;
+    min-width: 160px;
+    max-width: none;
+  }
+
+  .site-footer-col-wide {
+    flex: 1 1 280px;
+    min-width: 280px;
+    max-width: none;
+  }
+}
+
+
+/**
+ * Desktop-only footer indent. Kept at the end of the file so it wins over the
+ * base .site-footer-inner rule, which is declared later in source order.
+ */
+@media (min-width: 1440px) {
+  .site-footer-inner {
+    padding-left: 57px;
+  }
+
+  /**
+   * The footer content is a 1333px block pinned to the right edge of the inner
+   * container, not a column that grows with it: at 1440 that lands on the 57px
+   * indent, above 1520 the block stops moving. The copyright line is 1244px of
+   * centred text inside the same block, so it carries the 89px difference as
+   * padding instead of a second alignment rule.
+   */
+  .site-footer-columns,
+  /**
+   * Desktop keeps the reference's own placement: a 1333px block pinned to the
+   * right edge of the inner column, not centred in the viewport.
+   */
+  .site-footer .site-footer-copyright {
+    width: 1333px;
+    max-width: 100%;
+    margin-inline: 0;
+    align-self: flex-end;
+  }
+
+  .site-footer-copyright {
+    padding-right: 89px;
+  }
+
+  /**
+   * The centred banner heading takes the whole card above 1440 (client
+   * 23.08.2026). The reference held it to 70%, which on a car page broke the
+   * line into three - the heading there is the name of the car plus the
+   * sentence - while the full width sets it in two, and the card was never
+   * short of room. `text-wrap: balance` keeps the lines even.
+   */
+  .site-cta-heading {
+    width: 100%;
+  }
+}
+
+
+/**
+ * Below 1440 the reference stacks an empty 24px Framer spacer above the footer
+ * columns with a 60px gap; the same 84px is reproduced as padding instead of an
+ * empty node.
+ */
+@media (max-width: 1439px) {
+  .site-footer-inner {
+    padding-top: 84px;
+  }
+}
+
+
+@media (min-width: 810px) and (max-width: 1439px) {
+  /**
+   * The three columns need 740px - 160 + 160 + 280 with the 70px gutters - and
+   * the symmetric 50px inset leaves 710 at 810, which drops the contacts
+   * column onto a second row. The tablet breakpoint therefore carries the same
+   * 20px inset as mobile, so the row stays whole down to 810 exactly as the
+   * client asked on 21.08.2026. Above 840 the row already had slack and
+   * centres itself, so nothing there moves.
+   */
+  .site-footer-inner {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .site-404-disc-clip {
+    top: 0;
+    height: calc(100% + 200px);
+  }
+
+  .site-404-disc {
+    top: auto;
+    bottom: 321px;
+    left: calc(35.3% - 187px);
+  }
+}
+
+/**
+ * The Ukrainian "Швидкі посилання" heading widens its column to 194px, which
+ * puts the footer row 4px over the 770 the 810 breakpoint leaves. The gutter
+ * gives those pixels back at the bottom of the tablet range, where nothing
+ * else needs them; above 870 both locales fit with the full 70.
+ */
+@media (min-width: 810px) and (max-width: 869px) {
+  .site-footer-columns {
+    column-gap: 60px;
+  }
+}
+
+/**
+ * Mobile navigation panel. No reference frame exists - the legacy overlay is
+ * never rendered - so the design follows what the saved Framer markup resolves
+ * to: a dark full-screen panel, 18px/27 white entries, category chips with a
+ * 100px radius and the accent outline used elsewhere on the site.
+ */
+/**
+ * Mobile overlay. Every value measured off the reference at 390px: a
+ * full-screen #222 panel padded 32/30/40 with 32px between its rows, the
+ * wordmark at 40/28 w700 red, a 36px close control, the language pill and the
+ * entries at 18/27 w500 white on a 38px step with the Cars categories nested
+ * at 20/28 on a 28px step.
+ *
+ * The phone button is the exception: the reference put it under the list, and
+ * it now sits directly under the wordmark, above the language pill (client
+ * 25.08.2026). It is a row of the panel like any other, so it takes the same
+ * 32px rhythm instead of the 16px it had inside the nav.
+ */
+.site-mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px 30px 40px;
+  overflow-y: auto;
+  background: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  color: #fff;
+}
+
+.site-mobile-menu[hidden] {
+  display: none;
+}
+
+.site-mobile-menu-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 36px;
+}
+
+.site-mobile-menu-logo {
+  font-size: 40px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-mobile-menu-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/**
+ * The language picker keeps the header control exactly as it is - the
+ * reference shows the same 140x41 white pill inside the overlay.
+ */
+.site-mobile-menu-locale .site-locale {
+  display: block;
+}
+
+/**
+ * On the dark panel the picker is opaque white, not the translucent grey it
+ * carries in the header - the reference reads rgb(255, 255, 255) here.
+ */
+.site-mobile-menu-locale .site-locale-face {
+  background: #fff;
+}
+
+.site-mobile-menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.site-mobile-menu-list,
+.site-mobile-menu-sublist {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.site-mobile-menu-list {
+  gap: 11px;
+}
+
+.site-mobile-menu-list > li > a {
+  position: relative;
+  display: block;
+  font-size: 18px;
+  line-height: 27px;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+}
+
+/** Current page: the red dot the header and footer use, in a 14px indent. */
+.site-mobile-menu-list > li > a[aria-current] {
+  padding-left: 14px;
+}
+
+.site-mobile-menu-list > li > a[aria-current]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+/**
+ * The reference leaves 10px between the Cars entry and its first category,
+ * then stacks the categories with no gap of their own - their 28px line box
+ * is the whole rhythm.
+ */
+.site-mobile-menu-list > li > .site-mobile-menu-sublist {
+  gap: 0;
+  margin-top: 10px;
+}
+
+.site-mobile-menu-sublist > li > a {
+  position: relative;
+  display: block;
+  padding-left: 36px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+}
+
+/**
+ * The category being read carries the same red dot as the entries above it
+ * (client 22.08.2026). The dot is placed inside the 36px indent the sublist
+ * already has, so a marked row sits on exactly the same line as an unmarked
+ * one - the list must not shift when a category is current.
+ */
+.site-mobile-menu-sublist > li > a[aria-current]::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+/**
+ * The phone button is the header's, so its geometry and glyph stay in one
+ * place; only the hover scale is dropped - there is no pointer here.
+ *
+ * `flex: 0 0 auto` because it is a direct child of the scrolling column now:
+ * a flex item there is shrinkable by default, and a panel long enough to
+ * scroll would squash the 38px button instead of scrolling past it.
+ */
+.site-mobile-menu-phone {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  width: 236px;
+  margin-right: 0;
+  padding: 0 12px;
+}
+
+/**
+ * The label sits at 49.39px from the button's left edge in the reference,
+ * which is 37.39px past its own 12px padding.
+ */
+.site-mobile-menu-phone > span:not(.site-phone-icon) {
+  padding-left: 37.39px;
+}
+
+.site-mobile-menu-phone:hover {
+  transform: none;
+}
+
+@media (min-width: 1440px) {
+  .site-mobile-menu {
+    display: none;
+  }
+}
+
+/**
+ * Breadcrumb row of the page hero. Reference (scripts/diag-breadcrumb.mjs):
+ * a 24px-tall flex line, 10px between every crumb and every separator, clipped
+ * by the hero; text is the 20/24 w600 preset, links red and dark on hover,
+ * the current page in the body colour. Centred on the section pages, aligned
+ * to the container start on a car detail page.
+ */
+/**
+ * The row is a centred flex item, so its width is its content and the clip
+ * below never fired: a long Ukrainian trail pushed the whole document
+ * sideways instead of being cut, which is what the reference does.
+ */
+.site-crumbs {
+  max-width: 100%;
+}
+
+/**
+ * The trail wraps instead of being cut (client's request 23.08.2026). The
+ * reference clips the row, which on a phone took the name of the car off the
+ * right edge - the one crumb that says which page this is. Wrapping keeps the
+ * whole trail at every width; a crumb and the separator in front of it stay on
+ * one line (.site-crumbs li is a nowrap flex item), so the break can only fall
+ * between crumbs. The clip stays as a last resort for a name longer than the
+ * screen - the longest in the database, "Mercedes Vito Tourer", needs 225 of
+ * the 280px a 320px phone offers.
+ */
+.site-crumbs > ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.site-crumbs[data-align='center'] > ol {
+  justify-content: center;
+}
+
+.site-crumbs[data-align='start'] > ol {
+  justify-content: flex-start;
+}
+
+.site-crumbs li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: pre;
+}
+
+.site-crumbs a,
+.site-crumbs span {
+  text-align: left;
+  text-wrap: nowrap;
+  white-space: pre;
+}
+
+.site-crumbs a {
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  text-decoration: none;
+}
+
+.site-crumbs a:hover {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-crumbs[data-tone='light'] a,
+.site-crumbs[data-tone='light'] span {
+  color: var(--token-4ba3b38d-f0e9-4031-bcf7-e3252a939999, #fff);
+}
+
+.site-crumbs[data-tone='light'] a:hover {
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+/** Staging strip that stacks the breadcrumb variants on /v2/chrome. */
+.site-crumbs-stand {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+  padding: 40px 50px;
+}
+
+.site-crumbs-stand-dark {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+  padding: 40px 50px;
+  background: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+
+/**
+ * Car card of the fleet, popular and related grids. Reference frames
+ * cars@<width>-<locale>-card-rest / -card-hover: the geometry is identical on
+ * every width, only the column width of the grid changes, so nothing here is
+ * breakpoint-dependent. The photo box keeps a 4:3 ratio and contains the
+ * image, exactly as the reference does - a photo of another ratio is letter-
+ * boxed rather than cropped.
+ */
+.site-car-card {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  padding: 12px 12px 24px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * The photo box is a 4:3 window whatever the picture's own proportions are.
+ * `min-height: 0` is what makes that true inside the column: a flex item may
+ * not shrink below its content by default, so a square photo grew the box past
+ * its ratio and pushed that one card's title below its neighbours'.
+ */
+.site-car-card-photo {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+}
+
+.site-car-card-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/**
+ * The text block is 134px tall whatever it holds: the title sits at its top
+ * and the price row at its bottom, and a title that wraps to a second line
+ * grows the block instead of overlapping the row.
+ */
+.site-car-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 134px;
+  width: 100%;
+}
+
+/**
+ * The title box spans the card, as in the reference: shrink-wrapped it would
+ * overflow instead of wrapping when a car name is long.
+ */
+.site-car-card-title {
+  width: 100%;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  transition: color 0.2s ease;
+}
+
+.site-car-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.site-car-card-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.site-car-card-caption {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  transition: color 0.2s ease;
+}
+
+.site-car-card-amount {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  transition: color 0.2s ease;
+}
+
+.site-car-card-pill {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 26px;
+  border-radius: 32px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/**
+ * Hover inverts the whole card: the panel takes the accent colour, every text
+ * turns white and the pill swaps to a white panel with accent text.
+ */
+.site-car-card:hover {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-car-card:hover .site-car-card-title,
+.site-car-card:hover .site-car-card-caption,
+.site-car-card:hover .site-car-card-amount {
+  color: #fff;
+}
+
+.site-car-card:hover .site-car-card-pill {
+  background: #fff;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+
+/**
+ * Staging stand for the components. Columns are the width the reference gives
+ * the component (296.66px for a fleet card at 1440), so the rendered box model
+ * can be compared with the captured spec directly. Removed with the /v2 tree.
+ */
+.site-stand {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 40px 50px;
+}
+
+.site-stand-col {
+  width: 296.66px;
+}
+
+
+/**
+ * Hover state of the primary button: a 24x24 circled arrow in surface-alt
+ * appears after the label. It is out of the flow at rest - `display: none`
+ * also drops the flex gap - so the resting button is byte-identical to the
+ * reference and only the hover frame gains the icon.
+ */
+/**
+ * The hover icon holds its place at rest instead of being taken out of the
+ * flow, and the label is nudged right by half of what the icon and its gap
+ * occupy, so the label still reads centred. On hover the nudge is dropped and
+ * the icon fades in: the pair re-centres exactly as the reference does it -
+ * label 17px to the left, icon in the space that was already reserved - and
+ * the button never changes width, whatever the label says.
+ *
+ * Taking the icon out of the flow (display: none) made the button 25-34px
+ * wider under the pointer on every label long enough to fill it, which is
+ * every Ukrainian one.
+ */
+.site-button-icon {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  opacity: 0;
+  /** Slides the last few pixels into place instead of blinking on. */
+  transform: translateX(-8px) scale(0.85);
+  color: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  transition:
+    opacity 0.28s ease-out,
+    transform 0.28s ease-out;
+}
+
+.site-button-label {
+  /** Half of the icon (24px) plus the button's gap (10px). */
+  transform: translateX(17px);
+  transition: transform 0.28s ease-out;
+}
+
+.site-button:hover .site-button-icon,
+.site-button:focus-visible .site-button-icon {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.site-button:hover .site-button-label,
+.site-button:focus-visible .site-button-label {
+  transform: translateX(0);
+}
+
+/** The movement is opt-out at the system level; the icon still appears. */
+@media (prefers-reduced-motion: reduce) {
+  .site-button-icon,
+  .site-button-label {
+    transition-duration: 0.01ms;
+  }
+
+  .site-button-icon {
+    transform: none;
+  }
+}
+
+/**
+ * The rail of /cars: a 320px column on the desktop breakpoint, full width
+ * below it, where the filter runs as a row under the grid.
+ */
+.site-stand-rail {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 0 50px 40px;
+}
+
+@media (min-width: 1440px) {
+  .site-stand-rail {
+    width: 320px;
+  }
+}
+
+/** Three fleet columns of 296.66px with the 40px gutter of /cars at 1440. */
+.site-stand-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 296.66px);
+  gap: 40px;
+  padding: 0 50px 40px;
+}
+
+
+/**
+ * Category filter of /cars. The reference lays it out as two columns of text
+ * links with a 16px row gap and 80px between the columns; below the desktop
+ * breakpoint the same two groups become rows with a 40px gap, wrapping onto a
+ * second line when the viewport is too narrow for all six.
+ *
+ * The reference has no hover state at all here; the ink hover below is the
+ * agreed fix (plan section 7.3), matching the breadcrumb links.
+ */
+.site-cat-filter {
+  display: flex;
+  gap: 80px;
+}
+
+/**
+ * The items shrink-wrap their text, as the inline links of the reference do:
+ * stretched to the column width they would carry a click and a focus ring far
+ * wider than the label.
+ */
+.site-cat-filter-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.site-cat-filter-item {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-cat-filter-item:hover {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-cat-filter-item[aria-current] {
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/** Heading above the filter: 20/24 w600 in the muted colour. */
+.site-cat-filter-title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+}
+
+@media (max-width: 1439px) {
+  .site-cat-filter {
+    flex-wrap: wrap;
+    gap: 20px 40px;
+  }
+
+  .site-cat-filter-col {
+    flex-direction: row;
+    gap: 40px;
+  }
+}
+
+
+/**
+ * FAQ accordion. Reference: group heading 20/28 w700, 40px above a list of
+ * items with a 10px gap; every item is a 10px panel, 20px/26px padding, 16px
+ * between the header row and the answer.
+ */
+.site-faq-group {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.site-faq-group-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/**
+ * The panel stays a block box: `display: flex` on a `details` turns the closed
+ * content into an ordinary flex item and the browser stops hiding it, so the
+ * 16px gap is a margin on the answer instead.
+ */
+.site-faq-item {
+  padding: 20px 26px;
+  border-radius: 10px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * The chevron sits at the right edge of the row and the question box takes
+ * 0.9 of the space the row has left over, exactly as the reference sizes it -
+ * that is where the gap between a long question and the chevron comes from.
+ */
+.site-faq-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-faq-head::-webkit-details-marker {
+  display: none;
+}
+
+/**
+ * Both texts keep the reference's wrapping: `pre-wrap` honours the line breaks
+ * an editor types into the admin, and `balance` is what makes the reference
+ * split a three-line answer evenly instead of leaving a short last line.
+ */
+.site-faq-question {
+  flex: 0.9 0 0;
+  white-space: pre-wrap;
+  text-wrap: balance;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  transition: color 0.2s ease;
+}
+
+.site-faq-icon {
+  flex: 0 0 auto;
+  display: block;
+  width: 24px;
+  height: 25px;
+  font-size: 24px;
+}
+
+.site-faq-item .site-faq-answer {
+  width: 90%;
+  margin-top: 16px;
+  white-space: pre-wrap;
+  text-wrap: balance;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+}
+
+/**
+ * Open and hovered look the same in the reference: the panel goes accent and
+ * the question white. The chevron is not drawn while the item is open, but its
+ * box stays, so the header row keeps its 25px height.
+ */
+.site-faq-item[open],
+.site-faq-item:hover {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-faq-item[open] .site-faq-question,
+.site-faq-item:hover .site-faq-question {
+  color: #fff;
+}
+
+/**
+ * The chevron flips when the item opens: the reference swaps the ink-coloured
+ * arrow of the closed state for a white one pointing the other way.
+ */
+.site-faq-icon-closed,
+.site-faq-icon-open {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.site-faq-icon-open {
+  display: none;
+  color: #fff;
+}
+
+.site-faq-item[open] .site-faq-icon-closed {
+  display: none;
+}
+
+.site-faq-item[open] .site-faq-icon-open {
+  display: block;
+}
+
+/** Two 650px FAQ columns with the 40px gutter of the reference at 1440. */
+.site-stand-faq {
+  align-self: stretch;
+  display: flex;
+  gap: 40px;
+  padding: 0 50px 40px;
+}
+
+.site-stand-faq > * {
+  width: 650px;
+  max-width: 100%;
+}
+
+
+/**
+ * Testimonials slider. Reference: the track is one slide wide and as tall as
+ * its tallest slide, the arrows sit 32px below it, 50px discs 20px apart. A
+ * slide is a centred column with a 40px gap; the quote is capped at 800px on
+ * the desktop breakpoint and runs the full width below it.
+ */
+.site-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+}
+
+.site-reviews-viewport {
+  overflow: hidden;
+}
+
+.site-reviews-track {
+  display: flex;
+  align-items: stretch;
+  transition: transform 0.2s ease;
+}
+
+.site-reviews-slide {
+  flex: 0 0 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.site-reviews-kicker {
+  width: 100%;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-reviews-quote {
+  width: 100%;
+  font-size: 18px;
+  line-height: 27px;
+  font-weight: 500;
+  text-align: center;
+  white-space: pre-wrap;
+  text-wrap: balance;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-reviews-author {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.site-reviews-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 100%;
+  object-fit: cover;
+}
+
+.site-reviews-name {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-reviews-arrows {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+/**
+ * The arrow is the reference's own 50x51 picture - accent disc and white glyph
+ * in one file - so the button itself is a bare box around it. Its alt text
+ * lives in the media library, like every other image of the render.
+ */
+.site-reviews-arrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 51px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.site-reviews-arrow img {
+  display: block;
+  width: 50px;
+  height: 51px;
+}
+
+@media (min-width: 1440px) {
+  .site-reviews-quote {
+    width: 800px;
+    max-width: 100%;
+  }
+}
+
+/** The slider stand mirrors the 1340px content column of the home page. */
+.site-stand-reviews {
+  align-self: stretch;
+  padding: 0 50px 40px;
+}
+
+
+
+/**
+ * Photo gallery of a car page. Reference: a 26px column of a 480px main photo
+ * and a row of three equal thumbnails 200px tall with a 30px gap; below the
+ * tablet breakpoint the whole block shrinks to 280 / 100 with 10px gaps.
+ */
+.site-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 100%;
+}
+
+.site-gallery-main {
+  width: 100%;
+  height: 480px;
+}
+
+.site-gallery-thumbs {
+  display: flex;
+  gap: 30px;
+}
+
+.site-gallery-thumb {
+  flex: 1 1 0;
+  height: 200px;
+}
+
+.site-gallery-main,
+.site-gallery-thumb {
+  overflow: hidden;
+}
+
+.site-gallery-main img,
+.site-gallery-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+/**
+ * The main photo is shown whole (client 23.08.2026). Every one of the 13 cars
+ * carries a cut-out car on a transparent ground, not a photograph with room to
+ * spare, so cropping it to the box - which is what the reference does - cuts
+ * the bumper or a wheel off the very picture the page is about. The ground is
+ * transparent, so `contain` shows no letterbox, only the car. The thumbnails
+ * stay cropped: those are real photographs, and a crop is what they are for.
+ */
+.site-gallery-main img {
+  object-fit: contain;
+}
+
+/**
+ * The photographs answer the pointer the way the phone button in the header
+ * does - the same scale over the same 0.2s (client 22.08.2026). Only the
+ * picture moves; its box is clipped, so a zoom never pushes the neighbouring
+ * thumbnail or the column beside it.
+ */
+.site-gallery-main:hover img,
+.site-gallery-thumb:hover img {
+  transform: scale(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-gallery-main img,
+  .site-gallery-thumb img {
+    transition: none;
+  }
+
+  .site-gallery-main:hover img,
+  .site-gallery-thumb:hover img {
+    transform: none;
+  }
+}
+
+@media (max-width: 809px) {
+  .site-gallery {
+    gap: 10px;
+  }
+
+  /**
+   * A 280px box is a square at phone width, while the pictures run from 1:1 to
+   * 16:9; letting the box take the 4:3 of the majority keeps the car as large
+   * as the column allows and leaves no band of empty space above it.
+   */
+  .site-gallery-main {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .site-gallery-thumbs {
+    gap: 10px;
+  }
+
+  .site-gallery-thumb {
+    height: 100px;
+  }
+}
+
+/** The gallery stand mirrors the 678.95px photo column of a car page at 1440. */
+.site-stand-gallery {
+  align-self: stretch;
+  padding: 0 50px 40px;
+}
+
+@media (min-width: 1440px) {
+  .site-stand-gallery .site-gallery {
+    width: 678.95px;
+  }
+}
+
+/** The form stand mirrors the 700px form column of the contact page at 1440. */
+.site-stand-form {
+  align-self: stretch;
+  padding: 0 50px 40px;
+}
+
+@media (min-width: 1440px) {
+  .site-stand-form .site-form {
+    width: 700px;
+  }
+}
+
+/**
+ * Below the tablet breakpoint the reference pages fall back to a 20px gutter,
+ * so the stand does too - otherwise a component is measured in a column
+ * narrower than the one it really gets.
+ */
+@media (max-width: 809px) {
+  .site-stand-reviews,
+  .site-stand-rail,
+  .site-stand-faq,
+  .site-stand-gallery,
+  .site-stand-form,
+  .site-stand-grid {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+
+/**
+ * Form fields. Reference: a 50px surface-alt box with a 10px radius and 15px
+ * padding holding a borderless 16/19.2 control in ink, its placeholder in the
+ * muted colour; fields stack with a 15px gap. The booking form uses the same
+ * box at 40px with 12px padding and a translucent grey fill.
+ */
+.site-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.site-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/**
+ * The name of the field is announced but not drawn: the reference leaves the
+ * placeholder as the only label, and a placeholder stops being a name the
+ * moment the visitor types. This is the same 1x1 clip the reference itself
+ * uses for the label of the locale select.
+ */
+.site-field-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.site-field-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 50px;
+  padding: 15px;
+  border-radius: 10px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+}
+
+/**
+ * The booking form's own field: 12px padding over a translucent grey, with a
+ * smaller 14/16.8 control in #999 - that is what the reference resolves to,
+ * which is why the box lands on 40.8px rather than a round 40.
+ */
+.site-field-box--compact {
+  min-height: 40px;
+  padding: 12px;
+  background: rgba(187, 187, 187, 0.15);
+}
+
+/** A textarea carries the padding itself, so its box has none. */
+.site-field-box--area {
+  padding: 0;
+}
+
+.site-field-box input,
+.site-field-box select,
+.site-field-box textarea {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 19.2px;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-field-box textarea {
+  padding: 15px;
+  height: 120px;
+  resize: vertical;
+}
+
+.site-field-box input::placeholder,
+.site-field-box textarea::placeholder {
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+}
+
+.site-field-box--compact input,
+.site-field-box--compact select,
+.site-field-box--compact textarea {
+  font-size: 14px;
+  line-height: 16.8px;
+  color: #999;
+}
+
+/**
+ * The focus ring belongs on the box, not on the borderless control inside it:
+ * around the control it would hug the text line instead of the field.
+ */
+.site-field-box:has(:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: 0 0 0 calc(var(--focus-ring-width) + var(--focus-ring-offset)) var(--focus-ring-halo);
+}
+
+.site-field-box :focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/** Invalid field: an accent hairline around the box and a message under it. */
+.site-field--invalid .site-field-box {
+  box-shadow: inset 0 0 0 1px var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-field-error {
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+/** The submit of a form is 42px tall, two more than a link button. */
+.site-form .site-button {
+  width: 100%;
+  height: 42px;
+}
+
+
+/**
+ * Page head shared by the inner pages: the breadcrumb row above a centred
+ * title. Reference (spec/dom/about-us@*.json): 40px above the row (30 below
+ * the tablet breakpoint), 22px between the row and the title, and the title
+ * box is 70% of the content width on the desktop breakpoint and the full
+ * width below it.
+ */
+.site-page-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 40px 50px 0;
+}
+
+.site-page-title {
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-page-title {
+  width: 70%;
+}
+
+@media (max-width: 809px) {
+  .site-page-head {
+    padding: 30px 20px 0;
+  }
+
+  .site-page-title {
+    width: 100%;
+  }
+}
+
+/**
+ * About-us: the journey block. Reference: on the desktop breakpoint a 747px
+ * photo beside a 471px white card; below it the two stack with a 40px gap and
+ * the photo drops to 400 and then 200 tall.
+ */
+.site-about-journey {
+  width: 100%;
+  max-width: 1520px;
+}
+
+.site-about-journey-inner {
+  display: flex;
+  width: 100%;
+  padding: 50px 50px 48px;
+}
+
+/**
+ * The photo carries the fixed width and the card takes what is left: sized the
+ * other way round the card lands on 471.016px instead of the reference's
+ * 471.031, and that hundredth of a pixel moves a word between two lines.
+ */
+.site-about-photo {
+  flex: 0 0 868.969px;
+  min-width: 0;
+  height: 747px;
+}
+
+.site-about-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/**
+ * The card is a fixed 750px box on every breakpoint above mobile: the
+ * reference does not grow it for the longer Ukrainian copy, it lets the text
+ * run past the white panel.
+ */
+/**
+ * Height follows the text. The reference fixes it at 750px, which fits only
+ * the desktop column it was drawn for: between 810 and 1280 the same copy
+ * leaves 348-420px of empty white below itself, and the block reads as a gap
+ * rather than a card. The desktop rule keeps the accepted frame.
+ */
+.site-about-journey-card {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 60px 40px;
+  background: #fff;
+}
+
+.site-about-journey-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.site-about-kicker {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The card's heading and its copy are justified (client 23.08.2026): the block
+ * is a column of running text and the flush right edge reads as one body,
+ * where the centred heading used to leave a ragged shape above it.
+ *
+ * Justification needs hyphenation to go with it. The card is 290px wide on a
+ * phone, and without breaks inside words the browser pays for the flush edge
+ * with word spaces wide enough to tear holes down the paragraph. Both layouts
+ * carry `lang`, so the browser hyphenates in the right language.
+ */
+.site-about-journey-title {
+  font-size: 38px;
+  line-height: 57px;
+  font-weight: 500;
+  text-align: justify;
+  hyphens: auto;
+  white-space: pre-wrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The body copy of the cards keeps the `pre-line` + `pretty` pair the phase-1
+ * injector had to add - it collapses the accidental double spaces of the
+ * source text while keeping the manual line breaks of the two list cards. The
+ * journey paragraph and the banner heading are balanced instead, as in the
+ * reference.
+ */
+.site-about-journey-text,
+.site-about-card-text,
+.site-about-step-text {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+  white-space: pre-line;
+  text-wrap: pretty;
+  opacity: 0.6;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-about-journey-text {
+  white-space: pre-wrap;
+  text-align: justify;
+  hyphens: auto;
+}
+
+/**
+ * The four info cards. The grid rows are 318px but every card is 350 and
+ * centred in its row, so the cards overhang it by 16px top and bottom - that
+ * is how the reference lays them out.
+ */
+.site-about-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /**
+   * While the grid has two columns every card is the same height: the row
+   * takes the tallest card in it and the cards stretch to fill it. The
+   * reference instead pins the row at 318px and hides whatever sticks out,
+   * which only holds at desktop width - as the grid narrows a card grows to
+   * 544px inside that 318px row and loses its heading and its last lines.
+   * Equal height without a clip keeps the look and lets the copy grow.
+   */
+  grid-auto-rows: 1fr;
+  gap: 30px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+/**
+ * The cell only carries the card; clipping belongs to the desktop rule alone,
+ * where the row is fixed on purpose.
+ */
+.site-about-card-cell {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.site-about-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+  /**
+   * Height follows the text at every width. The reference fixes it at 350px,
+   * which only holds for the desktop column: as the grid narrows the same
+   * paragraphs need up to 644px, and a fixed box spills them past the painted
+   * background. 350px is kept as the floor, so a short card still matches the
+   * reference, and the card grows whenever the copy needs more - including
+   * copy added later, which a fixed height would silently clip.
+   */
+  min-height: 350px;
+  padding: 60px 32px;
+  border-radius: 10px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+}
+
+.site-about-card-head {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+}
+
+.site-about-card-icon {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.site-about-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-about-card-text {
+  width: 100%;
+}
+
+/**
+ * Closing banner of the about page: a dark 432px card with a 30px radius, the
+ * heading at 70% of its content width on the desktop breakpoint and the book
+ * button under it.
+ */
+.site-about-cta {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+.site-about-cta-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 30px;
+  width: 100%;
+  height: 432px;
+  padding: 80px 80px 80px 100px;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.site-about-cta-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-about-cta-heading {
+  position: relative;
+  width: 70%;
+  font-size: 44px;
+  line-height: 60px;
+  font-weight: 700;
+  white-space: pre-wrap;
+  text-wrap: balance;
+  color: #fff;
+}
+
+.site-about-cta-button {
+  position: relative;
+}
+
+@media (max-width: 1439px) {
+  .site-about-journey-inner {
+    flex-direction: column;
+    gap: 40px;
+    padding: 80px 50px;
+  }
+
+  .site-about-photo {
+    height: 400px;
+  }
+
+  .site-about-photo {
+    flex: 0 0 auto;
+  }
+
+  .site-about-journey-card {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 40px;
+  }
+
+  .site-about-journey-title {
+    font-size: 30px;
+  }
+
+  .site-about-cards {
+    gap: 20px;
+  }
+
+  .site-about-cta-card {
+    justify-content: center;
+    padding: 80px 80px 80px 50px;
+  }
+
+
+
+  .site-about-cta-heading {
+    width: 100%;
+    font-size: 48px;
+    line-height: 58px;
+  }
+}
+
+@media (max-width: 809px) {
+  .site-about-journey-inner {
+    padding: 60px 20px;
+  }
+
+  .site-about-photo {
+    height: 200px;
+  }
+
+  .site-about-journey-card {
+    padding: 40px 30px;
+  }
+
+  .site-about-journey-title {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .site-about-cards {
+    grid-template-columns: 1fr;
+    /**
+     * One column: nothing to line up with, so each card is only as tall as
+     * its own text - equal heights here would pad every short card out to
+     * the longest one.
+     */
+    grid-auto-rows: auto;
+    padding: 0 20px;
+  }
+
+  .site-about-cta {
+    padding: 0 20px;
+  }
+
+  .site-about-cta-card {
+    padding: 30px;
+  }
+
+  /**
+   * Every page but one gives the mobile header 20px of vertical padding. The
+   * 404 snapshot is the outlier - Framer left it at 30px there - so it opts
+   * back in through .site-shell--tall-nav rather than dragging the other six
+   * pages 20px down (plan section 7.3).
+   */
+  .site-nav {
+    padding: 20px 50px;
+  }
+
+  .site-shell--tall-nav .site-nav {
+    padding: 30px 50px;
+  }
+
+  .site-about-cta-heading {
+    font-size: 36px;
+    line-height: 46px;
+  }
+}
+
+
+/**
+ * About-us: the "how it works" block. Below the desktop breakpoint the
+ * reference lays the four steps out as ordinary rows - a 100px disc beside a
+ * title and its description - one column below 810 and two above it. On the
+ * desktop breakpoint it turns into a zigzag diagram: two steps on a top row,
+ * two on a bottom row, a dashed rail with four dots between them, a blurred
+ * accent ellipse behind and the word GoCar as a watermark.
+ */
+.site-about-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 100px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 100px 50px;
+}
+
+.site-about-steps-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.site-about-steps-head .site-about-kicker {
+  width: 60%;
+  text-align: center;
+}
+
+.site-about-steps-title {
+  width: 70%;
+  font-size: 44px;
+  line-height: 60px;
+  font-weight: 700;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * Below the desktop breakpoint the watermark is wider than the diagram and
+ * would widen the page, so it is clipped sideways; vertically nothing is
+ * clipped or the 150px blur of the ellipse would end in a hard edge. On the
+ * desktop breakpoint everything fits inside the 1259px canvas and no clip is
+ * applied at all - it would cut the drop shadow off the last disc, which sits
+ * exactly on the right edge.
+ */
+.site-about-diagram {
+  position: relative;
+  display: grid;
+  width: 100%;
+}
+
+@media (max-width: 1439px) {
+  .site-about-diagram {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+}
+
+.site-about-step {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.site-about-step-disc {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 25px;
+  background: #fff;
+  box-shadow: var(--shadow-3, rgba(0, 0, 0, 0.1) 4px 4px 10px 0px);
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * The hairline ring around the disc. The reference draws it as a 0.8px #222
+ * border on a pseudo-element rather than on the disc itself, so the ring sits
+ * on top of the fill and never takes part in the box model - the disc stays
+ * exactly 100px whether the ring is there or not.
+ */
+.site-about-step-disc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0.8px solid var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.site-about-step-disc img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.site-about-step-disc .site-about-step-icon-hover {
+  display: none;
+}
+
+.site-about-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.site-about-step-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/** Blurred accent ellipse behind the diagram. */
+.site-about-glow {
+  position: absolute;
+  border-radius: 100%;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  opacity: 0.2;
+  filter: blur(150px);
+  pointer-events: none;
+}
+
+.site-about-watermark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-transform: uppercase;
+  font-size: 200px;
+  line-height: 160px;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0.3;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/**
+ * The rail between the two rows: a dashed line the width of the diagram with
+ * four dots on it. Both are the reference art - three concentric #222 discs
+ * for a dot, a 1.09px dashed stroke at 0.6 opacity for the line.
+ */
+.site-about-rail {
+  display: none;
+}
+
+@media (max-width: 1439px) {
+  .site-about-steps {
+    gap: 60px;
+    padding: 80px 50px;
+  }
+
+  .site-about-steps-title {
+    width: 80%;
+    font-size: 48px;
+    line-height: 58px;
+  }
+
+  .site-about-diagram {
+    grid-template-columns: repeat(2, 1fr);
+    align-items: center;
+    gap: 40px 140px;
+  }
+
+  .site-about-step {
+    position: relative;
+  }
+
+  .site-about-step-text {
+    text-wrap: balance;
+  }
+
+  /**
+   * The arrow the reference draws in the gap between the two columns, centred
+   * on the step it starts from. It exists on this breakpoint only.
+   */
+  .site-about-step--1::after,
+  .site-about-step--3::after {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    width: 40px;
+    height: 14px;
+    margin: -7px 0 0 50px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cpath d='M 38.966 7.716 C 39.278 7.412 39.278 6.92 38.966 6.616 L 33.875 1.666 C 33.562 1.363 33.056 1.363 32.743 1.666 C 32.431 1.97 32.431 2.462 32.743 2.766 L 37.269 7.166 L 32.743 11.566 C 32.431 11.869 32.431 12.362 32.743 12.666 C 33.056 12.969 33.562 12.969 33.875 12.666 Z M 0 7.944 L 38.4 7.944 L 38.4 6.388 L 0 6.388 Z' fill='%23222'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+  }
+
+  /**
+   * On the tablet breakpoint the ellipse is small, fully opaque and blurred by
+   * 100px - it is the wash that makes the white watermark readable at all.
+   */
+  .site-about-glow {
+    left: 50%;
+    top: 32px;
+    width: 117px;
+    height: 117px;
+    margin-left: -58.5px;
+    opacity: 1;
+    filter: blur(100px);
+  }
+
+  .site-about-watermark {
+    left: -41.44px;
+    top: -14px;
+    transform: none;
+  }
+}
+
+@media (max-width: 809px) {
+  /** The reference leaves 20px more under the diagram on mobile. */
+  .site-about-steps {
+    gap: 40px;
+    padding: 60px 20px 80px;
+  }
+
+  /** On mobile the reference shifts the banner crop right. */
+  .site-about-cta-image {
+    object-position: 57.7% 47.5%;
+  }
+
+  .site-about-steps-title {
+    width: 100%;
+  }
+
+  .site-about-steps-title {
+    font-size: 36px;
+    line-height: 46px;
+  }
+
+  .site-about-diagram {
+    grid-template-columns: 1fr;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .site-about-glow {
+    left: -33px;
+    top: 50px;
+    width: 427px;
+    height: 280px;
+    margin-left: 0;
+    opacity: 0.2;
+    filter: blur(150px);
+  }
+
+  .site-about-watermark {
+    left: -52.5px;
+    top: 188px;
+    font-size: 128px;
+    line-height: 102.4px;
+    transform: none;
+  }
+}
+
+/**
+ * Desktop diagram. Every offset below is measured off the reference: the block
+ * is a fixed 1259x410 canvas centred in the content column, the four steps sit
+ * at two rows 230px apart with the lower row pushed 290px to the right, and
+ * the second and fourth steps are mirrored so their disc faces outwards.
+ */
+@media (min-width: 1440px) {
+  /**
+   * Desktop keeps the reference's fixed card: at this width the copy fills it
+   * to within 61px, so the block reads as a card rather than a gap.
+   */
+  .site-about-journey-card {
+    min-height: 750px;
+  }
+
+  /**
+   * The reference lets the text come within 44px of the bottom
+   * rather than keeping the full 60px padding, which is exactly how its four
+   * cards all measure 350px. Stating that as the bottom padding reproduces the
+   * accepted frame to the pixel while leaving the height free to grow - a
+   * fixed 350px here would clip the next paragraph anyone adds.
+   */
+  .site-about-card {
+    padding-bottom: 44px;
+  }
+
+  .site-about-step-disc {
+    border-radius: 50%;
+  }
+
+  .site-about-diagram {
+    display: block;
+    width: 1259px;
+    height: 410px;
+    margin: 0 auto;
+  }
+
+  /**
+   * The step keeps the height of its disc. Left to grow, it went to 108px on
+   * hover and `align-items: center` pushed the disc 4px down with it - and the
+   * disc is the one thing here that may not move, since it is centred on a dot
+   * of the rail. Fixing the height pins it: the revealed description overflows
+   * the box downwards instead, which is what the block already does visually.
+   */
+  .site-about-step {
+    position: absolute;
+    width: 378px;
+    height: 100px;
+  }
+
+  /**
+   * Each step is placed so its 100px disc is centred on the dot below it.
+   * The dots live on .site-about-rail, which starts 43.33px into the diagram,
+   * at 0 / 308.9 / 830.67 / 1138.67 with a 41px sprite - so their centres are
+   * 63.83 / 372.73 / 894.5 / 1202.5. The reference misses every one of them
+   * (by -13.8, -32.7, +32.5 and +6.5); these values put them back on axis.
+   *
+   * A mirrored step (2 and 4) holds its disc at the right end of its 378px
+   * box, so its left is the disc's left minus 278.
+   */
+  .site-about-step--1 {
+    left: 13.83px;
+    top: 0;
+  }
+
+  .site-about-step--2 {
+    left: 566.5px;
+    top: 0;
+    flex-direction: row-reverse;
+  }
+
+  /** A mirrored step sets its label against the disc, so the text ends there. */
+  .site-about-step--2 .site-about-step-title,
+  .site-about-step--4 .site-about-step-title {
+    text-align: right;
+  }
+
+  .site-about-step--3 {
+    left: 322.73px;
+    top: 230px;
+  }
+
+  .site-about-step--4 {
+    left: 874.5px;
+    top: 230px;
+    flex-direction: row-reverse;
+  }
+
+  .site-about-step-body {
+    width: 246px;
+    gap: 32px;
+  }
+
+  /**
+   * On this breakpoint a step is a label only until the pointer reaches it:
+   * the reference then promotes the label from 18/27 w500 to 20/28 w700 and
+   * reveals the description under it with a 32px gap. The step grows from 100
+   * to 108px, which moves nothing else - the four steps are positioned
+   * absolutely, exactly as in the reference. The same description is always
+   * visible below 1440, so nothing is hidden from a touch device.
+   */
+  .site-about-step-text {
+    display: none;
+  }
+
+  .site-about-step:hover .site-about-step-text {
+    display: block;
+  }
+
+  /**
+   * The disc reacts too, and only on this breakpoint: it turns accent and the
+   * dark glyph is replaced by its white twin - two separate files in the
+   * reference, not one recoloured icon. Below 1440 the reference leaves both
+   * the disc and the icon alone under the pointer.
+   */
+  .site-about-step:hover .site-about-step-disc {
+    background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  }
+
+  .site-about-step:hover .site-about-step-icon {
+    display: none;
+  }
+
+  .site-about-step:hover .site-about-step-disc .site-about-step-icon-hover {
+    display: block;
+  }
+
+  .site-about-step-title {
+    font-size: 18px;
+    line-height: 27px;
+    font-weight: 500;
+  }
+
+  .site-about-step:hover .site-about-step-title {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 700;
+  }
+
+  .site-about-glow {
+    left: 107.81px;
+    top: 0;
+    width: 993px;
+    height: 366px;
+  }
+
+  .site-about-watermark {
+    left: 281.14px;
+    top: 108.59px;
+    transform: none;
+  }
+
+  /**
+   * The rail: one dashed line with four dots on it. Both are the reference
+   * art - three concentric #222 discs at 0.25/0.5/0.4 for a dot, a 1.09px
+   * dashed stroke at 0.6 opacity for the line - carried as background images
+   * so the dots keep their size while the line stretches.
+   */
+  .site-about-rail {
+    position: absolute;
+    left: 43.33px;
+    top: 145px;
+    display: block;
+    width: 1179.67px;
+    height: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 40'%3E%3Cg transform='translate(0.5 0)'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23222' opacity='0.25'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23222' opacity='0.5'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23222' opacity='0.4'/%3E%3C/g%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 40'%3E%3Cg transform='translate(0.5 0)'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23222' opacity='0.25'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23222' opacity='0.5'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23222' opacity='0.4'/%3E%3C/g%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 40'%3E%3Cg transform='translate(0.5 0)'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23222' opacity='0.25'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23222' opacity='0.5'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23222' opacity='0.4'/%3E%3C/g%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 40'%3E%3Cg transform='translate(0.5 0)'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23222' opacity='0.25'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23222' opacity='0.5'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23222' opacity='0.4'/%3E%3C/g%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 273 3' preserveAspectRatio='none'%3E%3Cpath d='M 1.619 1.5 L 271.381 1.5' fill='transparent' stroke-width='1.09' stroke='rgb(34,34,34)' stroke-miterlimit='10' stroke-dasharray='4.31, 4.31' opacity='0.6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size:
+      41px 40px,
+      41px 40px,
+      41px 40px,
+      41px 40px,
+      1097.67px 3px;
+    background-position:
+      0 0,
+      308.9px 0,
+      830.67px 0,
+      1138.67px 0,
+      41px 18.5px;
+  }
+}
+
+/**
+ * FAQ page.
+ *
+ * Hero: the shared page head over a full-bleed banner, 400px tall on the
+ * desktop breakpoint, 350 on the tablet one and 300 below it, with the gap
+ * between the two shrinking 50 / 40 / 30. The page head sits 10px higher than
+ * on the other pages below 1440, and its title spans the full content width
+ * instead of the usual 70%.
+ */
+.site-faq-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+  width: 100%;
+}
+
+.site-faq-banner {
+  width: 100%;
+  height: 400px;
+}
+
+.site-faq-banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-page-head--faq .site-page-title {
+  width: 100%;
+}
+
+/**
+ * The questions: two rows of two columns above 810, one column below, in a
+ * section whose vertical padding follows the reference 100 / 80 / 60.
+ */
+.site-faq {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 100px 0;
+}
+
+.site-faq-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+.site-faq-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+/**
+ * Both columns of a row are half of what the row leaves after the gutter -
+ * 650px at 1440, 690 at 1920, 335 at 810 - and a row with a single group
+ * keeps that half rather than stretching over the full width.
+ */
+.site-faq-row > * {
+  flex: 0 1 50%;
+  min-width: 0;
+}
+
+/**
+ * Closing banner. It is not the booking banner of the other pages: the text is
+ * left-aligned, the heading keeps the ink colour, a subtitle sits under it and
+ * the button leads to /contact. The card is 400px tall from 810 up, with the
+ * content vertically centred; below that it is sized by an 80px band above and
+ * below the content.
+ */
+.site-faq-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+.site-faq-cta-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  min-height: 400px;
+  padding: 0 90px;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+/**
+ * On the desktop breakpoint the content sits 100px from the card edge while
+ * its width is measured off a 90px inset - 696px of the 1160 left at 1440 and
+ * 744 of 1240 at 1920. The 10px difference is an offset of the content, not of
+ * the box it is measured in, so it is a margin rather than more padding.
+ */
+@media (min-width: 1440px) {
+  .site-faq-cta-text,
+  .site-faq-cta-button {
+    margin-left: 10px;
+  }
+}
+
+.site-faq-cta-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/**
+ * The text column is 60% of the card content and the subtitle 80% of that -
+ * 696px and 556.8 of the 1160 the reference leaves at 1440.
+ */
+.site-faq-cta-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 60%;
+}
+
+.site-faq-cta-heading {
+  width: 100%;
+  text-align: left;
+}
+
+.site-faq-cta-sub {
+  width: 80%;
+  text-align: left;
+}
+
+.site-faq-cta-button {
+  position: relative;
+}
+
+@media (max-width: 1439px) {
+  /** Above the banner the reference drops the head padding from 40 to 30. */
+  .site-page-head--faq {
+    padding-top: 30px;
+  }
+
+  .site-faq-hero {
+    gap: 40px;
+  }
+
+  .site-faq-banner {
+    height: 350px;
+  }
+
+  .site-faq {
+    padding: 80px 0;
+  }
+
+  .site-faq-cta-card {
+    padding: 0 50px;
+  }
+}
+
+@media (max-width: 809px) {
+  .site-faq-hero {
+    gap: 30px;
+  }
+
+  .site-faq-banner {
+    height: 300px;
+  }
+
+  /** Below 810 the reference shifts the crop of both photos. */
+  .site-faq-banner img {
+    object-position: 69.5% 39%;
+  }
+
+  .site-faq-cta-image {
+    object-position: 45.9% 51.6%;
+  }
+
+  .site-faq {
+    padding: 60px 0;
+  }
+
+  .site-faq-inner {
+    gap: 60px;
+    padding: 0 20px;
+  }
+
+  .site-faq-row {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .site-faq-row > * {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  /** The group title sits 20px above its list instead of 40. */
+  .site-faq-group {
+    gap: 20px;
+  }
+
+  .site-faq-cta {
+    padding: 0 20px;
+  }
+
+  .site-faq-cta-card {
+    min-height: 0;
+    padding: 80px 30px;
+  }
+
+  .site-faq-cta-text {
+    width: 80%;
+  }
+
+  /**
+   * Mobile opens no question: the reference renders the first item of the
+   * first group open from 810 up and closed below it, and an attribute cannot
+   * be set per breakpoint. The server sends that one item open and marked, so
+   * the desktop needs no script; here the marked item is painted closed, and
+   * client/faq-initial.tsx closes it for real and drops the marker, so every
+   * item the visitor opens behaves normally.
+   */
+  .site-faq-item--initial[open]:not(:hover) {
+    background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  }
+
+  .site-faq-item--initial[open]:not(:hover) .site-faq-question {
+    color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  }
+
+  .site-faq-item--initial[open] .site-faq-answer {
+    display: none;
+  }
+
+  .site-faq-item--initial[open] .site-faq-icon-closed {
+    display: block;
+  }
+
+  .site-faq-item--initial[open] .site-faq-icon-open {
+    display: none;
+  }
+}
+
+/**
+ * Booking page.
+ *
+ * Reference (spec/dom/book@*.json): a 694px form centred under the page head,
+ * 20px of padding and 20px between its blocks; the content column is therefore
+ * 654px above 810 and 300 below it. The 197px of air the reference leaves
+ * between the button and the footer is reproduced as it is.
+ */
+.site-book {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 22px 0 100px;
+}
+
+.site-book-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 694px;
+  padding: 20px;
+}
+
+.site-book-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/**
+ * The section headings of the form. The reference draws them at weight 500;
+ * 600 is the client decision of 21.08.2026, so the five steps of the form
+ * stand out from the controls between them.
+ */
+.site-book-legend {
+  font-size: 22px;
+  line-height: 26.4px;
+  font-weight: 600;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/** Category pills and extras share one shape: a 35px accent-outlined pill. */
+.site-book-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.site-book-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 35px;
+  padding: 0 14px;
+  border: 2px solid var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  border-radius: 9999px;
+  background: #fff;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  font-size: 15px;
+  line-height: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.site-book-pill input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  cursor: inherit;
+}
+
+.site-book-pill.is-on {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+}
+
+.site-book-pill.is-off {
+  border-color: rgba(253, 59, 59, 0.45);
+  color: rgba(34, 34, 34, 0.5);
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.site-book-pill.is-off input {
+  cursor: not-allowed;
+}
+
+.site-book-extras {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.site-book-extra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-book-extra-price {
+  margin-left: 6px;
+  font-weight: 700;
+}
+
+.site-book-extra-note {
+  color: rgba(122, 122, 122, 0.7);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/**
+ * The vehicle row: a 458px select with the picture at the right edge of the
+ * column. The picture keeps the width the reference gives it and the height of
+ * the select, and is contained rather than cropped - the placeholder disc is
+ * square and a car photo is not, and neither may be cut (client, 21.08.2026).
+ */
+.site-book-vehicle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.site-book-vehicle .site-field {
+  flex: 0 1 458px;
+}
+
+
+
+/**
+ * The vehicle list is the largest control of the form in the reference - 18px
+ * against the 14 of the dates and places - and needs the same specificity as
+ * the shared compact rule to keep that size.
+ */
+.site-book-form .site-field-box--compact .site-book-select--vehicle {
+  font-size: 18px;
+  line-height: normal;
+}
+
+.site-book-photo {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 70px;
+  margin-left: auto;
+}
+
+.site-book-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/** Pick-up and drop-off: the heading holds the first column of the row. */
+.site-book-block--row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-book-block--row .site-book-legend {
+  flex: 0 0 156px;
+}
+
+.site-book-row {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-book-row .site-field,
+.site-book-row .site-book-date {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/** The whole date field opens the calendar, so it reads as one control. */
+.site-book-date {
+  cursor: pointer;
+}
+
+.site-book-date input {
+  cursor: pointer;
+}
+
+/**
+ * The controls carry the ink colour of the original form: the shared compact
+ * field paints its control #999 for the placeholder, and a vehicle list in
+ * that grey reads as a disabled control. The reference sets the select, the
+ * dates and the time and place lists in #222; the placeholder itself stays
+ * muted, so an empty field looks exactly as it did.
+ */
+.site-book-form .site-field-box--compact input,
+.site-book-form .site-field-box--compact select,
+.site-book-form .site-field-box--compact textarea {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The control fills its field box, so the whole 40px surface answers a tap:
+ * sized by its text alone a select is 23px tall and a text input 19, which is
+ * under the 24px floor of WCAG 2.5.8 on a phone. The box keeps the height the
+ * reference gives it - the padding moves to the sides, and the control takes
+ * the height instead of adding to it.
+ */
+.site-book-form .site-field-box--compact {
+  height: 40px;
+  padding: 0 12px;
+  align-items: stretch;
+}
+
+.site-book-form .site-field-box--area {
+  height: auto;
+  padding: 0;
+}
+
+.site-book-vehicle .site-field-box {
+  height: 70px;
+}
+
+.site-book-input,
+.site-book-select {
+  height: 100%;
+  font-size: 14px;
+  line-height: 16.8px;
+}
+
+.site-book-textarea {
+  height: auto;
+}
+
+.site-book-textarea {
+  min-height: 100px;
+  padding: 12px;
+  resize: vertical;
+}
+
+/**
+ * The running total: a 2px accent box with the four figures of the booking.
+ * The numbers follow the same rules as leads.ts, and the server recomputes
+ * them from the database on submit.
+ */
+.site-book-summary {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  border-radius: 10px;
+  font-size: 18px;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-book-summary-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 4px 0;
+}
+
+.site-book-summary-row strong {
+  min-width: 60px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-book-submit {
+  width: 100%;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 16.8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.site-book-submit {
+  transition: transform 0.2s ease;
+}
+
+/** The same 1.03 as the contact form: see .site-contact-submit above. */
+.site-book-submit:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.site-book-submit:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+/**
+ * Confirmation window. The reference has no frame of its own for it - the
+ * legacy page drew one from a tweak script - so it follows the site surfaces:
+ * a white 20px-radius card over a dimmed page, with the details in the same
+ * two-column rows the summary uses.
+ */
+.site-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(34, 34, 34, 0.55);
+}
+
+.site-modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px 30px;
+  border-radius: 20px;
+  background: #fff;
+  text-align: center;
+}
+
+.site-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: none;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.site-modal-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: rgba(253, 59, 59, 0.1);
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-modal-title {
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-modal-sub {
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 22px;
+  color: rgba(34, 34, 34, 0.7);
+}
+
+.site-modal-details {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  text-align: left;
+}
+
+.site-modal-details-title {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-modal-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 3px 0;
+  font-size: 15px;
+  line-height: 21px;
+  color: rgba(34, 34, 34, 0.75);
+}
+
+.site-modal-row b {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  text-align: right;
+}
+
+.site-modal-details hr {
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px solid rgba(34, 34, 34, 0.12);
+}
+
+.site-modal-row--total b {
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  font-size: 17px;
+}
+
+/**
+ * The page closes with the site's own section step - 100 on the desktop
+ * breakpoint, 80 on the tablet one and 60 below it - instead of the 197px of
+ * air the Framer page left between the button and the footer (client decision,
+ * 21.08.2026).
+ */
+@media (min-width: 810px) and (max-width: 1439px) {
+  .site-book {
+    padding-bottom: 80px;
+  }
+}
+
+@media (max-width: 809px) {
+  .site-book {
+    padding: 22px 0 60px;
+  }
+
+  /**
+   * Below 810 the reference draws the form at its 390px design width and keeps
+   * it 340 wide on every screen up to 809, which leaves a narrow column in the
+   * middle of a tablet. Here it stays fluid and only stops growing at the
+   * desktop width of the form (client decision, 21.08.2026).
+   */
+  .site-book {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .site-book-form {
+    max-width: 694px;
+  }
+
+}
+
+/**
+ * The form stacks when its column can no longer hold a row: the three controls
+ * of a pick-up need 654px, which the fluid form reaches at a 734px viewport.
+ * Tying the stack to the width the layout actually needs, rather than to the
+ * 810 breakpoint of the page, keeps the tablet band on the row layout instead
+ * of a column of full-width boxes with air beside them.
+ */
+@media (max-width: 733px) {
+  .site-book-block--row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .site-book-block--row .site-book-legend {
+    flex: 0 0 auto;
+  }
+
+  /**
+   * Stacked, the three controls of a row take the full column: left at the
+   * centre alignment of the desktop row, the date field shrank to the width of
+   * its own text and sat narrower than the time and place next to it.
+   */
+  .site-book-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .site-book-vehicle {
+    flex-direction: column;
+  }
+
+  .site-book-vehicle .site-field {
+    flex: 0 0 auto;
+  }
+
+  .site-book-photo {
+    width: 100%;
+    height: 124px;
+    margin-left: 0;
+  }
+}
+
+/**
+ * Scroll appearance of page blocks - the single standard for the whole
+ * phase-2 render (plan-phaze-2.md §4.2.2, decision of 18.08.2026): opacity
+ * 0 to 1 plus a 16px lift over 0.4s ease-out. Blocks opt in with .site-reveal;
+ * client/reveal.tsx flips data-revealed once per block.
+ *
+ * The hidden start is behind `scripting: enabled` so a page whose script
+ * never runs shows its content rather than a blank column, and behind
+ * `prefers-reduced-motion: no-preference` so the movement is opt-out at the
+ * system level. Static frames therefore match the reference 1:1 once the
+ * appearance has finished.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .site-reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.4s ease-out,
+      transform 0.4s ease-out;
+  }
+
+  .site-reveal[data-revealed='1'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /**
+   * Steps of "How it works" appear one by one as the page is scrolled, the way
+   * the reference does it (client 23.08.2026, measured on the Framer original):
+   * each step carries `site-reveal` itself, so it is its own trigger and starts
+   * moving when it reaches the fold rather than on a timer shared with the
+   * others. The movement is the standard's - nothing per-step to configure.
+   *
+   * That works because the home page stacks its steps down the page. The about
+   * page lays the same four across a row, so they all reach the fold together
+   * and a per-step trigger would fire them at once. There the reference runs a
+   * timed cascade instead, and these are its own numbers, read off
+   * true-millions-064789.framer.app/about-us: a 30px lift over 0.6s, each step
+   * starting 0.25s after the one before it, in reading order. Deliberately
+   * slower and taller than the site's 16px/0.4s standard - the client asked for
+   * this block to match the reference (23.08.2026).
+   */
+  /**
+   * The diagram clips horizontally below 1440, and a step waiting 30px lower
+   * than its place is 30px past that edge - the bottom row was cut through the
+   * text while it moved. The clip box is given those 30px back and the same
+   * amount is taken off the outside, so the block occupies exactly what it did
+   * before and nothing below it shifts.
+   */
+  .site-reveal--cascade .site-about-diagram {
+    padding-bottom: 30px;
+    margin-bottom: -30px;
+  }
+
+  .site-reveal--cascade .site-about-step {
+    opacity: 0;
+    transform: translateY(30px);
+    transition:
+      opacity 0.6s ease-out,
+      transform 0.6s ease-out;
+  }
+
+  .site-reveal--cascade[data-revealed='1'] .site-about-step {
+    opacity: 1;
+    transform: none;
+  }
+
+  .site-reveal--cascade[data-revealed='1'] .site-about-step--2 {
+    transition-delay: 0.25s;
+  }
+
+  .site-reveal--cascade[data-revealed='1'] .site-about-step--3 {
+    transition-delay: 0.5s;
+  }
+
+  .site-reveal--cascade[data-revealed='1'] .site-about-step--4 {
+    transition-delay: 0.75s;
+  }
+}
+
+/**
+ * Shared block heading: the 20/28 w700 line that titles a block inside a
+ * section. It is the heading of the FAQ groups ("Booking and Reservations"),
+ * adopted on 21.08.2026 as the standard for every block heading of the new
+ * render - the contact page is the first page to use it in that role.
+ */
+.site-block-title {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-block-title--center {
+  text-align: center;
+}
+
+/**
+ * Contact: hero. The same shape as the FAQ hero - the page head above a
+ * full-bleed banner 400 / 350 / 300px tall, with a 50 / 40 / 30 gap.
+ */
+.site-contact-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+  width: 100%;
+}
+
+.site-contact-banner {
+  width: 100%;
+  height: 400px;
+}
+
+.site-contact-banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/**
+ * The contact block: the form on the left, the details on the right. The
+ * reference puts the two side by side only on the desktop breakpoint and
+ * stacks them from 1439 down, which is reproduced here.
+ *
+ * The details column is 520px wide, 20 more than the reference, so the address
+ * and the opening hours (a fourth card, added 21.08.2026) stay on one line -
+ * the form column keeps the reference's 700px at 1440 as a result.
+ */
+.site-contact {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 100px 0;
+}
+
+.site-contact-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 120px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+.site-contact-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.site-contact-col--form {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.site-contact-col--info {
+  flex: 0 0 520px;
+  gap: 32px;
+}
+
+.site-contact-text {
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-contact-text--center {
+  text-align: center;
+}
+
+/**
+ * The paragraph under "How to find our office" is a block of running text,
+ * not a caption: it is justified so both its edges line up with the map frame
+ * below it (client 22.08.2026).
+ */
+.site-contact-text--justify {
+  text-align: justify;
+  text-wrap: wrap;
+}
+
+.site-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/** The submit of the contact form: a full-width 42px pill, as in the reference. */
+.site-contact-submit {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  border-radius: 32px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/**
+ * Submit buttons answer the pointer the same way the phone button in the
+ * header does, but gently: 1.03 instead of its 1.1 (client's decision
+ * 21.08.2026). A submit runs the full width of the form, so a tenth of it is
+ * 34px of overhang on either side of the fields, while 1.03 is ten - enough to
+ * read as a press-ready state without breaking the column.
+ */
+.site-contact-submit:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.site-contact-submit:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+/** The honeypot is not shown to anyone: it exists for robots to fill in. */
+.site-contact-trap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/**
+ * The four cards share the height the form leaves, so both columns end on the
+ * same line: the column is the flex row's full height, the list takes what the
+ * heading does not, and every card takes an equal share of it.
+ */
+.site-contact-cards {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.site-contact-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 78px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * Three of the four cards are links - the phone, the address and the mailbox -
+ * so they answer the pointer with the site's own 0.2s ease on the fill. The
+ * opening hours are not a link and stay still. The reference has no hover here
+ * at all, because in it no card was reachable by keyboard either.
+ */
+a.site-contact-card:hover {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+a.site-contact-card:hover .site-contact-label,
+a.site-contact-card:hover .site-contact-value {
+  color: #fff;
+}
+
+.site-contact-label {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+}
+
+.site-contact-value {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The map block. The reference sits it flush against the block above; here it
+ * gets the standard section rhythm (100 / 80 / 60), agreed 21.08.2026. The
+ * frame keeps the reference's 20px radius and 441 / 400 / 350px height.
+ */
+.site-contact-map {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 0 100px;
+}
+
+.site-contact-map-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+/**
+ * The text runs the full width of the block, matching the map frame under it
+ * (client 22.08.2026); it used to be held to 70% and centred.
+ */
+.site-contact-map-inner .site-contact-text {
+  max-width: 100%;
+}
+
+.site-contact-map-frame {
+  display: flex;
+  width: 100%;
+  height: 441px;
+  margin-top: 20px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.site-contact-map-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/**
+ * The closing banner of the inner pages: the same card as on the 404, but the
+ * kicker, the heading and the button are pushed to the right edge and the
+ * heading is right-aligned. Reference: card 432px tall, 80px padding, a 30px
+ * gap between the three, heading 79% of the content width.
+ */
+.site-cta-card--end {
+  align-items: flex-end;
+  gap: 30px;
+  min-height: 432px;
+  padding: 80px 80px 108px;
+}
+
+.site-cta-kicker {
+  position: relative;
+  text-align: right;
+}
+
+.site-cta-card--end .site-cta-heading {
+  max-width: 79%;
+  text-align: right;
+}
+
+/**
+ * On the desktop breakpoint the heading is given 85% of the card instead of
+ * the reference's 79% (decision of 21.08.2026): the line breaks read better
+ * on a wide screen. Below 1440 the reference proportion stays.
+ */
+@media (min-width: 1440px) {
+  .site-cta-card--end .site-cta-heading {
+    width: 85%;
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 1439px) {
+  .site-contact-hero {
+    gap: 40px;
+  }
+
+  .site-contact-banner {
+    height: 350px;
+  }
+
+  .site-contact {
+    padding: 80px 0;
+  }
+
+  /** The reference stacks the two columns from 1439 down. */
+  .site-contact-inner {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .site-contact-col--info {
+    flex: 0 0 auto;
+  }
+
+  .site-contact-cards {
+    flex: 0 0 auto;
+  }
+
+  .site-contact-map {
+    padding: 0 0 80px;
+  }
+
+  .site-contact-map-frame {
+    height: 400px;
+  }
+
+  .site-cta-card--end {
+    min-height: 0;
+    padding: 80px 50px;
+  }
+}
+
+@media (max-width: 809px) {
+  .site-contact-hero {
+    gap: 30px;
+  }
+
+  .site-contact-banner {
+    height: 300px;
+  }
+
+  .site-contact {
+    padding: 60px 0;
+  }
+
+  .site-contact-inner {
+    padding: 0 20px;
+  }
+
+  .site-contact-map {
+    padding: 0 0 60px;
+  }
+
+  .site-contact-map-inner {
+    padding: 0 20px;
+  }
+
+  .site-contact-map-inner .site-contact-text {
+    max-width: 100%;
+  }
+
+  .site-contact-map-frame {
+    height: 350px;
+  }
+
+  .site-cta-card--end {
+    padding: 50px 30px;
+  }
+
+  .site-cta-card--end .site-cta-heading {
+    max-width: 100%;
+  }
+}
+
+/**
+ * The whole field box is the tap target, not the 20px text line inside it: the
+ * padding moves from the box to the control, so a press anywhere in the 50px
+ * panel lands on the input (WCAG 2.5.8). The painted result is identical.
+ */
+.site-contact-form .site-field-box {
+  padding: 0;
+}
+
+.site-contact-form .site-field-box input {
+  min-height: 50px;
+  padding: 15px;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Home page
+ * ---------------------------------------------------------------------------
+ *
+ * Hero. Reference (spec/dom/home@*.json): a 415px text column, the car and a
+ * 260px column of category chips, all starting on the same line 57px under the
+ * navigation. Three deliberate changes, agreed with the client on 21.08.2026,
+ * are marked at the rules that carry them.
+ */
+.site-home-hero {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 57px 0 0;
+}
+
+/**
+ * The three blocks of the hero are placed by name, not by wrapping: the step
+ * from three columns to two and then to one is the footer's scheme (client's
+ * request 3 of 21.08.2026), and a wrapped flex row breaks it a whole
+ * breakpoint too early - the two columns still fit at 810 but their bases do
+ * not, so the car dropped under the text with 300px of room beside it.
+ */
+.site-home-hero-inner {
+  display: grid;
+  grid-template-columns: 415px minmax(0, 1fr) 260px;
+  grid-template-areas: 'text car cats';
+  align-items: start;
+  gap: 50px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+.site-home-hero-text {
+  display: flex;
+  grid-area: text;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.site-home-hero-title {
+  width: 100%;
+  text-align: left;
+  white-space: pre-wrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-home-hero-lead {
+  white-space: pre-wrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The car (client's request 1 of 21.08.2026). The file is trimmed to the car
+ * itself, so aligning the box with the top of the row aligns the car with the
+ * heading, and the width is the width of the car rather than of a canvas that
+ * is 39% empty - which is what makes it read larger than in the reference.
+ */
+/**
+ * On the three-column breakpoint the car is centred on the page, not on its
+ * own column, so it lines up with the centred "Our Fleet" heading of the next
+ * block (client's request 23.08.2026). The outer columns are not symmetrical -
+ * 415px of text plus a 50px gutter on the left against 260px of chips plus the
+ * same gutter on the right - which pushes the middle of the track (465 - 310) /
+ * 2 = 77.5px to the right of the middle of the page. Reserving the difference
+ * at the end of the track moves the centred image back by exactly half of it,
+ * at every width, without touching where the text or the chips sit.
+ *
+ * A margin rather than a transform: the image has to keep its box, so a
+ * narrowing hero shrinks it instead of sliding it under the chips. The track
+ * still leaves 410px at 1440, the width where this breakpoint ends, which is
+ * more than the 400px the picture is allowed to take.
+ */
+.site-home-hero-car {
+  display: flex;
+  grid-area: car;
+  justify-content: center;
+  margin-inline-end: 155px;
+}
+
+/**
+ * 400px on the desktop breakpoint (client's decision 21.08.2026), which is
+ * also where the picture stops being upscaled: the only copy of this photo in
+ * the delivery is 390px wide once the empty canvas is trimmed.
+ */
+.site-home-hero-car img {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+/**
+ * The column is centred on its row, which puts the middle category level with
+ * the middle of the car (client 23.08.2026). The row is as tall as the
+ * photograph - the tallest thing in it - and the car is aligned to the top of
+ * it, so the middle of the row is the middle of the car; five chips are
+ * symmetrical, so the middle of the column is the third one. That is why this
+ * is `align-self` and not a hand-measured offset: it holds at every desktop
+ * width and in both locales without a number to maintain.
+ *
+ * It replaces the 13px nudge that lined the first chip up with the first line
+ * of the heading - the request of the earlier screenshot the same day.
+ */
+.site-home-hero-cats {
+  grid-area: cats;
+  align-self: center;
+  padding-left: 40px;
+}
+
+/**
+ * A column of chips, each as wide as its own label. The width used to be
+ * pinned at 154px, which is what wrapped them one per line - and any label
+ * longer than that stuck out of the column: the Ukrainian "Позашляховик" is
+ * 172px and overhung it by 18px on every desktop width. A column lets each
+ * label size itself and cannot be outgrown.
+ */
+.site-home-hero-cats ul {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * Category chip: a 40px white pill with an accent hairline and an accent
+ * 16/22 w600 label. The reference answers no pointer here; the chip is a link
+ * to the fleet, so it inverts like every other link panel of the site.
+ */
+.site-home-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 26px;
+  border: 1px solid var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  border-radius: 32px;
+  background: #fff;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.site-home-chip:hover {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: #fff;
+}
+
+/** Section heading of the page: the 44/60 preset, centred by default. */
+.site-home-heading {
+  width: 100%;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-home-heading--left {
+  text-align: left;
+}
+
+/**
+ * The fleet. Reference: three 272px cards in a row, 64px apart, 52px between
+ * rows, the whole grid centred, and the heading 48px above it.
+ */
+/**
+ * The reference starts the fleet right under the hero; the block gets the
+ * site's standard section step instead (client's decision 21.08.2026).
+ */
+.site-home-fleet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  padding: 100px 50px;
+}
+
+.site-home-fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 296px);
+  gap: 40px;
+  justify-content: center;
+  width: 100%;
+}
+
+/**
+ * "Why choose us": a text column beside the picture, with three glass badges
+ * floating over the picture at the places the reference puts them - shares of
+ * the picture box, so they hold at every width.
+ */
+.site-home-why {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 0 100px;
+}
+
+.site-home-why-inner {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  width: 100%;
+  max-width: 1520px;
+  padding: 0 50px;
+}
+
+.site-home-why-text {
+  display: flex;
+  flex: 0 0 416px;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.site-home-why-list {
+  white-space: pre-wrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-home-why-figure {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.site-home-why-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.site-home-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 176px;
+  min-height: 64px;
+  padding: 20px;
+  border-radius: 20px;
+  background-image: linear-gradient(100deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  text-decoration: none;
+}
+
+.site-home-badge-title {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * Under the pointer the card opens: the sentence that belongs to the badge
+ * appears and the title steps down to 16/22 w400, which is what the reference
+ * swaps to (measured on the live render, 21.08.2026). The card is 64px tall at
+ * rest and 102 open; nothing around it moves, because it floats over the
+ * picture.
+ */
+.site-home-badge {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.site-home-badge:hover .site-home-badge-title,
+.site-home-badge:focus-visible .site-home-badge-title {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.site-home-badge:hover .site-home-badge-text,
+.site-home-badge:focus-visible .site-home-badge-text {
+  display: block;
+}
+
+/** The sentence belongs to the mobile card only; over the picture there is no room. */
+.site-home-badge-text {
+  display: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 400;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/** The three positions, measured off the reference as shares of the picture. */
+.site-home-badge--booking {
+  left: 12.2%;
+  top: 21.3%;
+}
+
+.site-home-badge--quality {
+  left: 50.8%;
+  top: 4.8%;
+}
+
+.site-home-badge--rates {
+  left: 79.9%;
+  top: 66.1%;
+}
+
+/** The pulse marker that ties a badge to the car: three discs, 23/16/7px. */
+.site-home-badge-dot {
+  position: absolute;
+  width: 23px;
+  height: 23px;
+}
+
+.site-home-badge-dot span {
+  position: absolute;
+  border-radius: 100%;
+  background: #fff;
+}
+
+.site-home-badge-dot span:nth-child(1) {
+  inset: 0;
+  opacity: 0.25;
+}
+
+.site-home-badge-dot span:nth-child(2) {
+  inset: 3px;
+  opacity: 0.5;
+}
+
+.site-home-badge-dot span:nth-child(3) {
+  inset: 8px;
+}
+
+.site-home-badge--booking .site-home-badge-dot {
+  right: -4px;
+  bottom: -5px;
+}
+
+.site-home-badge--quality .site-home-badge-dot {
+  left: -6px;
+  bottom: -4px;
+}
+
+.site-home-badge--rates .site-home-badge-dot {
+  left: -4px;
+  top: -5px;
+}
+
+/**
+ * "How it works": four rows of 154px, each holding a label and a 100px disc on
+ * one side of a 40px rail. The rail is the reference's own artwork - a triple
+ * ring with a dashed line under it - kept as an SVG of its own.
+ */
+.site-home-steps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 100px;
+  width: 100%;
+  padding: 0 50px 100px;
+}
+
+.site-home-steps-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.site-home-steps-kicker {
+  width: 100%;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-home-steps-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 876px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-home-step {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 40px;
+  align-items: center;
+  height: 154px;
+}
+
+/**
+ * Both cells name their row: with only the column pinned, sparse auto-placement
+ * pushes the rail of a right-hand row into a second, implicit row, and the rail
+ * collapses to nothing.
+ */
+.site-home-step-body {
+  display: flex;
+  grid-row: 1;
+  grid-column: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 32px;
+}
+
+.site-home-step--right .site-home-step-body {
+  grid-column: 3;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.site-home-step-text {
+  display: flex;
+  flex: 0 1 246px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+
+.site-home-step--right .site-home-step-text {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.site-home-step-title {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 27px;
+  font-weight: 500;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The sentence of the step: hidden until the pointer is on the row, which is
+ * how the reference tells the four steps apart from a list of four words.
+ */
+.site-home-step-note {
+  display: none;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-home-step:hover .site-home-step-note {
+  display: block;
+}
+
+.site-home-step:hover .site-home-step-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.site-home-step:hover .site-home-step-disc {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+/** The two glyphs are two files, not one repainted: only the twin is white. */
+.site-home-step-icon-hover {
+  display: none;
+}
+
+.site-home-step:hover .site-home-step-icon {
+  display: none;
+}
+
+.site-home-step:hover .site-home-step-icon-hover {
+  display: block;
+}
+
+.site-home-step-disc {
+  position: relative;
+  display: flex;
+  flex: 0 0 100px;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  background: #fff;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/**
+ * The hairline ring around the disc, the same one the steps of /about-us
+ * carry (client 22.08.2026). It is drawn on a pseudo-element rather than on
+ * the disc itself, so the ring sits over the fill and never joins the box
+ * model - the disc stays exactly 100px, and it survives the red hover.
+ */
+.site-home-step-disc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0.8px solid var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/**
+ * One of the four icons is 65x60, not square: without `contain` the box
+ * stretches it by 8%.
+ */
+.site-home-step-disc img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.site-home-step-disc {
+  transition: background-color 0.2s ease;
+}
+
+.site-home-step-rail {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: stretch;
+  background-image: url("/images/site/home-step-rail.svg");
+  background-repeat: no-repeat;
+  background-position: top center;
+}
+
+/** The last row ends the rail: the dashed line has nothing to run to. */
+.site-home-step:last-child .site-home-step-rail {
+  background-image: url("/images/site/home-step-rail-end.svg");
+}
+
+/** Testimonials: the slider of stage 3 over a full-bleed picture of a car. */
+.site-home-reviews {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 80px 50px;
+  overflow: hidden;
+}
+
+.site-home-reviews-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/** The slider sits over the picture; a negative z-index would hide it. */
+.site-home-reviews > *:not(.site-home-reviews-bg) {
+  position: relative;
+  z-index: 1;
+}
+
+/**
+ * Closing banner: a full-bleed car with the button and the heading in a 374px
+ * column on the left, both centred inside it, as the reference has them.
+ */
+/**
+ * Closing banner. Reference: a 1520px band - not the full window - with the
+ * button and the heading in a 374px column on the left and a 966x525 car on
+ * the right. Below 1440 the reference stacks the two, both across the content
+ * width.
+ */
+.site-home-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+  max-width: 1520px;
+  min-height: 525px;
+  margin: 0 auto;
+  padding: 0 50px;
+}
+
+/**
+ * The car is 966px wide and gives that width up first when the window is
+ * narrower than the banner needs: `min-width: 0` is what allows it, because a
+ * replaced element refuses to shrink below its own size otherwise - which cost
+ * the page five pixels of horizontal scroll at 1440 with a scrollbar.
+ */
+.site-home-cta-car {
+  flex: 0 1 966px;
+  align-self: stretch;
+  min-width: 0;
+  height: 100%;
+  object-fit: contain;
+  object-position: right center;
+}
+
+.site-home-cta-text {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  width: 374px;
+}
+
+.site-home-cta-heading {
+  width: 100%;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * Below 1440 the hero becomes two columns with the chips on their own row
+ * underneath, centred (client's requests 2 and 3 of 21.08.2026): the reference
+ * drops the car under the text as soon as the desktop breakpoint ends, even
+ * though two columns still fit, and leaves the chips leaning to the left.
+ */
+@media (max-width: 1439px) {
+  /** Two columns with the chips on a centred row of their own underneath. */
+  .site-home-hero-inner {
+    grid-template-columns: minmax(0, 440px) minmax(260px, 1fr);
+    grid-template-areas:
+      'text car'
+      'cats cats';
+    gap: 40px;
+  }
+
+  /** Two columns are symmetrical enough; the desktop compensation goes. */
+  .site-home-hero-car {
+    margin-inline-end: 0;
+  }
+
+  /** Below 1440 the chips are a centred row of their own, under the pair. */
+  .site-home-hero-cats {
+    align-self: auto;
+    padding-left: 0;
+  }
+
+  .site-home-hero-cats ul {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+  }
+
+
+  .site-home-why-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 40px;
+  }
+
+  .site-home-why-text {
+    flex: 0 0 auto;
+  }
+
+  /**
+   * Below 1440 the banner is a column - the car on top, the button and the
+   * heading centred under it (client's request 21.08.2026).
+   */
+  .site-home-cta {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    min-height: 0;
+    padding: 80px 50px;
+  }
+
+  .site-home-cta-car {
+    order: 1;
+    flex: 0 0 auto;
+    align-self: auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .site-home-cta-text {
+    order: 2;
+    align-items: center;
+    width: 100%;
+  }
+}
+
+/**
+ * The fleet keeps three cards for as long as three fit: 3 x 296 plus two 40px
+ * gutters and the 50px side padding need 1068px plus room for the scrollbar,
+ * and a pair fixed at the
+ * desktop breakpoint left 200px of empty margin on either side at 1132 and
+ * 1024 (client's request 21.08.2026).
+ */
+@media (max-width: 1083px) {
+  .site-home-fleet-grid {
+    grid-template-columns: repeat(2, 296px);
+  }
+}
+
+/**
+ * Below 760 the hero stacks: two columns no longer leave the car a usable
+ * width (415px of text and the gutters leave it 275px, and less than that
+ * makes it a thumbnail). The breakpoint is the hero's own, not one of the
+ * site's three - the client asked for the car to stay up top wherever there is
+ * room for it.
+ */
+@media (max-width: 759px) {
+  .site-home-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'text'
+      'car'
+      'cats';
+  }
+}
+
+@media (max-width: 809px) {
+  .site-home-hero {
+    padding: 40px 0 25px;
+  }
+
+  .site-home-hero-inner {
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .site-home-fleet {
+    gap: 30px;
+    padding: 60px 20px;
+  }
+
+  /** The card grows to 350 - the width the reference gives it on a phone. */
+  .site-home-fleet-grid {
+    grid-template-columns: repeat(2, minmax(0, 350px));
+    gap: 30px;
+  }
+
+  .site-home-why {
+    padding: 0 0 60px;
+  }
+
+  .site-home-why-inner {
+    padding: 0 20px;
+  }
+
+  /**
+   * Below 810 the reference takes the badges off the picture and stacks them
+   * under it as full-width cards, each with its sentence. Floating them over a
+   * 350px photo would push the widest one off the screen.
+   */
+  .site-home-why-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .site-home-badge {
+    position: static;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .site-home-badge-title {
+    text-align: left;
+  }
+
+  /** In the card the sentence reads from the left, like its title. */
+  .site-home-badge-text {
+    display: block;
+    align-self: stretch;
+    text-align: left;
+  }
+
+  .site-home-badge-dot {
+    display: none;
+  }
+
+  .site-home-steps {
+    gap: 40px;
+    padding: 0 20px 60px;
+  }
+
+  /** On a phone the rail moves to the left edge and every row reads the same. */
+  .site-home-steps-list {
+    max-width: 100%;
+  }
+
+  .site-home-step {
+    grid-template-columns: 40px 1fr;
+    gap: 20px;
+    height: 120px;
+  }
+
+  .site-home-step-body,
+  .site-home-step--right .site-home-step-body {
+    grid-column: 2;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 20px;
+  }
+
+  /** Every label reads from the left edge, whichever side the row is on. */
+  .site-home-step-text,
+  .site-home-step--right .site-home-step-text {
+    flex: 1 1 auto;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+  }
+
+  .site-home-step-disc {
+    flex: 0 0 76px;
+    width: 76px;
+    height: 76px;
+  }
+
+  .site-home-step-disc img {
+    width: 48px;
+    height: 48px;
+  }
+
+
+  /**
+   * On a phone the rail carries the dot at the height of the disc it belongs
+   * to - opposite the icon, not above it - so the row reads as one line. The
+   * dashed line is drawn here rather than baked into the artwork, because it
+   * has to run from edge to edge behind a centred dot.
+   */
+  .site-home-step-rail {
+    position: relative;
+    grid-column: 1;
+    background-image: url("/images/site/home-step-rail-end.svg");
+    background-position: center;
+  }
+
+  .site-home-step-rail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-left: 1px dashed rgba(34, 34, 34, 0.6);
+    transform: translateX(-0.5px);
+  }
+
+  .site-home-step:first-child .site-home-step-rail::before {
+    top: 50%;
+  }
+
+  .site-home-step:last-child .site-home-step-rail::before {
+    bottom: 50%;
+  }
+
+  .site-home-reviews {
+    padding: 60px 20px;
+  }
+
+  .site-home-cta {
+    padding: 60px 20px;
+  }
+
+  /** On a phone every step prints its sentence: there is no pointer to reveal it. */
+  .site-home-step-note {
+    display: block;
+  }
+
+  .site-home-step-title {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 700;
+  }
+}
+
+/**
+ * Back-to-top button. Reference: a 36x37 accent disc pinned 24px from the
+ * bottom right corner, fading in past a thousand pixels of scrolling. The
+ * fade is the reference's own 0.35s.
+ */
+.site-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 37px;
+  padding: 0;
+  border: 0;
+  border-radius: 100px;
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.35s ease,
+    transform 0.2s ease;
+}
+
+/**
+ * The same answer to the pointer the phone button in the header gives: the
+ * whole control grows by a tenth, 0.2s ease, nothing else moves.
+ */
+.site-to-top:hover {
+  transform: scale(1.1);
+}
+
+.site-to-top[data-shown='1'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/**
+ * On a page with a form, Google's reCAPTCHA badge occupies the same corner -
+ * 60px tall, 14px off the bottom - so the button steps above it instead of
+ * sitting on its logo, and shares its centre line: the collapsed badge shows
+ * its rightmost 70px, whose middle is 35px off the right edge, so a 36px disc
+ * is centred on it at right: 17px.
+ */
+.site-to-top[data-badge='1'] {
+  right: 17px;
+  bottom: 88px;
+}
+
+/**
+ * On a phone the footer ends with the copyright line across the full width,
+ * and a button 24px from the bottom sits on top of it; it is raised so that
+ * the last line of the page stays readable.
+ *
+ * The badge itself lands on that same copyright line - Google pins it 14px off
+ * the bottom, where the phone footer wraps the copyright into two lines that
+ * reach within 46px of the viewport - so on a phone the badge is lifted clear
+ * of it as well, and the button keeps its 14px step above the badge. Google
+ * writes the position into the element's style attribute, hence !important.
+ */
+@media (max-width: 809px) {
+  .site-to-top {
+    bottom: 70px;
+  }
+
+  .grecaptcha-badge {
+    bottom: 88px !important;
+  }
+
+  .site-to-top[data-badge='1'] {
+    bottom: 162px;
+  }
+}
+
+/**
+ * One card per row once two of them would be narrower than the photo needs.
+ * It has to come after the 809 rule: both are max-width queries of the same
+ * weight, so the later one wins where they overlap - which is exactly the
+ * phone, where a pair of cards was being squeezed to 152px each.
+ */
+@media (max-width: 609px) {
+  .site-home-fleet-grid {
+    grid-template-columns: minmax(0, 350px);
+  }
+}
+
+/**
+ * Fleet page (/cars and /cars/<slug>).
+ *
+ * Reference cars@1440-en: the section is one row of a card grid and a fixed
+ * 320px rail, 50px apart, inside a 1340px content box (1420 at 1920, where
+ * the row is capped at 1520 and centred). The rail is top-aligned, so a tall
+ * grid simply leaves the column empty below it.
+ */
+.site-fleet {
+  width: 100%;
+}
+
+.site-fleet-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 50px;
+  width: 100%;
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 100px 50px;
+}
+
+.site-fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/**
+ * The photo of a fleet card is a 4:3 box, but the reference stops it growing
+ * at 340px: on the wide single-column rows below 810 an uncapped box would be
+ * half again as tall as the card it sits in. The cap belongs to this page -
+ * the home grid never gets a card wide enough to reach it.
+ */
+.site-fleet .site-car-card-photo {
+  max-height: 340px;
+}
+
+.site-fleet-empty {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-fleet-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 48px;
+  flex: 0 0 320px;
+  width: 320px;
+}
+
+.site-fleet-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+}
+
+.site-fleet-group > h2 {
+  margin: 0;
+}
+
+/** Popular rail: a plain column of rows, 40px apart. */
+.site-popular-list {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+}
+
+.site-popular-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  text-decoration: none;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-popular-thumb {
+  display: block;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 83px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+}
+
+.site-popular-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-popular-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.site-popular-title,
+.site-popular-price {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/** The only hover the reference gives this row: the title turns accent. */
+.site-popular-card:hover .site-popular-title {
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  transition: color 0.2s ease;
+}
+
+/**
+ * SEO block between the fleet and the closing banner (client 21.08.2026):
+ * the standard centred section heading over a single measure of text.
+ */
+.site-benefits {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 0 50px 100px;
+}
+
+.site-benefits-title {
+  width: 100%;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * The copy is a paragraph, not a caption: centring left every line a
+ * different width and read as ragged, so it is justified across the measure
+ * while the heading above it stays centred (client 22.08.2026). `text-wrap:
+ * pretty` goes with it - shaping the last lines and justifying them are two
+ * answers to the same question.
+ */
+.site-benefits-text {
+  width: 100%;
+  text-align: justify;
+  text-wrap: wrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * Below 1440 the rail leaves the row and stands under the grid at full
+ * width, the grid drops to two tracks and the popular rows pair up.
+ */
+@media (max-width: 1439px) {
+  .site-fleet-inner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 80px 50px;
+  }
+
+  .site-fleet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px;
+  }
+
+  .site-fleet-side {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .site-popular-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px;
+  }
+
+  .site-benefits {
+    padding: 0 50px 80px;
+  }
+}
+
+/** One column of cards and of popular rows once the row is a phone wide. */
+@media (max-width: 809px) {
+  .site-fleet-inner {
+    padding: 60px 20px;
+  }
+
+  .site-fleet-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .site-popular-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .site-benefits {
+    padding: 0 20px 60px;
+  }
+}
+
+/**
+ * Below the narrowest design width the three links of a category column no
+ * longer fit on one line: at 320 the row is 326px wide inside a 280px page
+ * and pushes the whole document sideways. Letting the column wrap costs
+ * nothing above 360, where the reference row still fits.
+ */
+@media (max-width: 359px) {
+  .site-cat-filter-col {
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+}
+
+/**
+ * Chrome over a photograph. The car page is the only one where the reference
+ * does not give the nav a ground of its own: the menu sits directly on the
+ * hero image in white, and the band reaches the top of the document. The
+ * header keeps its place in the flow and is lifted above the photo, so the
+ * burger, the dropdown and the locale list all keep working.
+ */
+.site-shell--hero-nav .site-header {
+  position: relative;
+  z-index: 3;
+}
+
+.site-shell--hero-nav .site-menu a,
+.site-shell--hero-nav .site-menu a:hover,
+.site-shell--hero-nav .site-burger,
+.site-shell--hero-nav .site-locale-label {
+  color: var(--token-4ba3b38d-f0e9-4031-bcf7-e3252a939999, #fff);
+}
+
+/**
+ * Car detail page (/cars-detail/<slug>).
+ *
+ * Reference cars-detail__toyota-camry@1440-en: a dark full-bleed head with
+ * the breadcrumbs and the page title over a photograph, then a 1340px row of
+ * the 678.93px gallery and the 611.05px info column 50px apart.
+ */
+/**
+ * The reference draws the photograph in a 318px box that starts at the very
+ * top of the document and lets the opaque nav cover its first 121px, so the
+ * visible band is the bottom 197. Reproducing only the visible band would
+ * crop the picture differently, so the box keeps its full height and is
+ * pulled up by the height of our own nav.
+ */
+.site-car-hero {
+  --hero-nav: 121px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 318px;
+  /** The nav sits on top of the photograph, so the band starts above it. */
+  margin-top: calc(-1 * var(--hero-nav));
+  padding: 150px 0 0;
+  overflow: hidden;
+  background: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  /** The dark ground needs the light half of the focus ring, not the dark. */
+  --focus-ring-color: #fff;
+  --focus-ring-halo: #222;
+}
+
+.site-car-hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-car-hero-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 50px;
+}
+
+.site-car-hero-title {
+  width: 100%;
+  color: var(--token-4ba3b38d-f0e9-4031-bcf7-e3252a939999, #fff);
+}
+
+.site-car-main {
+  width: 100%;
+}
+
+.site-car-main-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 50px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 100px 50px 0;
+}
+
+.site-car-main-inner > .site-gallery {
+  flex: 0 1 678.93px;
+  min-width: 0;
+}
+
+.site-car-info {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 0 1 611.05px;
+  min-width: 0;
+}
+
+.site-car-info .site-car-name {
+  margin: 0 0 24px;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/**
+ * Price row. The reference sets both figures at 24/27; they are the numbers
+ * the visitor came for, so the per-day rate is the largest type on the column
+ * and the deposit answers it from the right edge (client 22.08.2026).
+ */
+.site-car-money {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+}
+
+.site-car-money-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.site-car-money-block--deposit {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.site-car-money-label {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+}
+
+.site-car-money-value {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-car-money-block--deposit .site-car-money-value {
+  font-size: 24px;
+  line-height: 32px;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+/**
+ * Tariff table. The reference leaves 88.5px of empty column above it and
+ * draws it as boxes with a solid 1px ink border; it now follows the price row
+ * at the standard 32px step and sits on the soft surface tone with hairline
+ * dividers, so the four rates read as one block (client 22.08.2026).
+ */
+.site-car-tariffs {
+  width: 100%;
+  margin: 32px 0 0;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  table-layout: fixed;
+}
+
+.site-car-tariffs th {
+  padding: 12px 8px;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+  background: rgba(34, 34, 34, 0.04);
+}
+
+.site-car-tariffs td {
+  padding: 14px 8px;
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-car-tariffs th + th,
+.site-car-tariffs td + td {
+  border-left: 1px solid rgba(34, 34, 34, 0.08);
+}
+
+.site-car-book {
+  align-self: flex-start;
+  margin-top: 40px;
+}
+
+/**
+ * The paragraph under the button is a block of running text, not a headline:
+ * it is set a step smaller than the reference's 18px and justified, so both
+ * of its edges line up with the tariff table above it (client 22.08.2026).
+ * `text-wrap: balance` is dropped - balancing and justifying the same lines
+ * fight each other.
+ */
+.site-car-info .site-car-description {
+  margin: 24px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: justify;
+  text-wrap: wrap;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+}
+
+/**
+ * Specifications: two columns of icon plus value, 40px apart, exactly as the
+ * reference lays them out. The sixth row (the drivetrain) simply extends the
+ * grid to three rows per column.
+ */
+/**
+ * 35px rather than the 60 the block used to open with: at 60 the info column
+ * ended 20px below the bottom of the gallery beside it, so the specifications
+ * hung past the photograph on every car and every desktop width (client
+ * 23.08.2026). The step is still the largest one inside the column, and the
+ * two columns now finish together.
+ */
+.site-car-specs {
+  margin-top: 35px;
+}
+
+.site-car-specs .site-car-specs-title {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+}
+
+/**
+ * Every specification is a row in its own outline (client 23.08.2026). The
+ * reference filled two bare columns with an icon and a value, and the value
+ * alone did not say which field it was - "2.0T" and "Передній" name nothing
+ * without their caption. The row now carries the caption beside the icon and
+ * answers with the value on the right, inside the same hairline capsule the
+ * category chips of the home page use. An outline rather than a filled tile:
+ * the tariff table right above the block is already drawn on the soft surface
+ * tone, and two grey masses in one column read as one.
+ *
+ * Two columns from the tablet up - which is what fills the 611px column of the
+ * desktop with no dead space beside it - and one on a phone.
+ */
+.site-car-specs .site-car-specs-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-car-specs-list > li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px 18px;
+  border: 1px solid rgba(34, 34, 34, 0.1);
+  border-radius: 32px;
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * The pointer fills the row with the tone the tariff table above it is drawn
+ * on (client 23.08.2026), so the two blocks answer a pointer the same way. The
+ * row is not a link and the fill claims nothing else - it only follows the eye.
+ */
+.site-car-specs-list > li:hover {
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+}
+
+/** Icon and caption open the row; a long caption wraps rather than overflows. */
+.site-car-spec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.site-car-spec-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 22px;
+  color: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+}
+
+.site-car-spec-label {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--token-bba30032-041f-4af5-b886-74ce396683a9, #7a7a7a);
+  overflow-wrap: anywhere;
+}
+
+/**
+ * The value closes the row on the right. It keeps its own line - a wrapped
+ * value would leave the caption beside a two-line block and break the rhythm
+ * of the column - and shrinks the caption first when the pair runs out of room.
+ */
+.site-car-spec-value {
+  flex: 0 1 auto;
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+/** "You may also like": five compact cards in one row on the desktop. */
+.site-car-related {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 100px 50px;
+}
+
+.site-car-related .site-car-related-title {
+  width: 100%;
+  margin: 0 0 40px;
+  text-align: center;
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+}
+
+.site-car-related-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.site-related-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 20px;
+  border-radius: 10px;
+  background: var(--token-9ee00783-8f3b-46bf-8017-52e27d21d43c, #f8f8f8);
+  color: var(--token-932a71f5-0629-44d7-81bf-ee4e6b1506fb, #222);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.site-related-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+.site-related-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/**
+ * Fractional grid columns give the 4:3 photo boxes heights that differ by a
+ * few pixels, which was enough to leave the five names on five baselines.
+ * The cards are stretched to a common height by the grid, so pushing the
+ * text group to the bottom lines them up whatever the photo measures.
+ */
+.site-related-title {
+  margin-top: auto;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.site-related-price {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+}
+
+.site-related-card:hover {
+  background: var(--token-b959d9dc-4bb0-456b-b29a-7ea9bf2057bd, #fd3b3b);
+  color: var(--token-4ba3b38d-f0e9-4031-bcf7-e3252a939999, #fff);
+}
+
+/** Below the desktop breakpoint the two columns stack and the row of five wraps. */
+@media (max-width: 1439px) {
+  .site-car-main-inner {
+    flex-direction: column;
+    padding: 80px 50px 0;
+  }
+
+  .site-car-main-inner > .site-gallery,
+  .site-car-info {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .site-car-hero {
+    --hero-nav: 101px;
+  }
+
+  .site-car-related {
+    padding: 80px 50px;
+  }
+
+  .site-car-related-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 809px) {
+  /**
+   * On a phone the 318px box of the reference is taller than the two lines it
+   * holds: the title ends 108px above the bottom of the dark band, and the
+   * 60px that opens the block below it read as one 168px hole between the head
+   * and the gallery (client's report 23.08.2026). The band now takes the
+   * height of its content and keeps the site's own head rhythm - 30px under
+   * the navigation, the same as .site-page-head, and 30px under the title -
+   * which leaves the standard 60px section step to separate it from the
+   * gallery. Above 810 the box stays as measured off the reference.
+   */
+  .site-car-hero {
+    --hero-nav: 76px;
+    min-height: 0;
+    padding: 106px 0 30px;
+  }
+
+  .site-car-hero-inner {
+    padding: 0 20px;
+  }
+
+  /**
+   * No step at all under the head (client 23.08.2026). 60px is the distance
+   * between two sections and this is not one - /cars and /about-us also open
+   * their first block right under their head. The gallery still does not touch
+   * the dark band: every main photo is a cut-out car with transparent room
+   * above it, which measures 28px (Tiguan) to 64px (Passat) at 320 and 35 to
+   * 81 at 390, so the picture brings its own margin.
+   */
+  .site-car-main-inner {
+    padding: 0 20px;
+  }
+
+  .site-car-money {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .site-car-money-block--deposit {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .site-car-tariffs th {
+    font-size: 13px;
+    line-height: 18px;
+    padding: 10px 4px;
+  }
+
+  .site-car-tariffs td {
+    font-size: 18px;
+    line-height: 26px;
+    padding: 12px 4px;
+  }
+
+  /** One row per line on a phone: the pair needs the whole width to breathe. */
+  .site-car-specs .site-car-specs-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-car-related {
+    padding: 60px 20px;
+  }
+
+  .site-car-related-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
