@@ -320,7 +320,7 @@ empty values never reach the markup.
 | ✅  | LCP image first            | The largest image of every page has `fetchpriority="high"`; the first-screen block is never hidden by the scroll animation |
 | ✅  | Lazy loading               | Below-the-fold images use `loading="lazy"` and `decoding="async"`                                                          |
 | ✅  | Minimal JavaScript         | Server components; only small client islands (menu, forms, slider, FAQ) are hydrated                                       |
-| ✅  | Analytics without blocking | The GTM / GA4 / Meta Pixel queues start at once, the vendor scripts load after the page's `load` event                     |
+| ✅  | Analytics without blocking | GTM / GA4 / Meta Pixel load asynchronously; IDs are validated, an empty ID emits nothing                                   |
 | ✅  | reCAPTCHA on demand        | Google's script (~340 KiB) loads on the visitor's first interaction; a submission always waits for it                      |
 
 ### 📱 Mobile optimization — before / after
@@ -336,9 +336,9 @@ runs — differences within ±5 points are measurement noise.
 | FAQ `/faq`      | 66 → **75** | 4.3 → **3.6 s**  |     570 → 460 ms     | 1788 → **646 KiB**  |
 | Home `/`        |  76 → 72¹   |   4.1 → 4.2 s    |     340 → 430 ms     | 1229 → **855 KiB**  |
 
-¹ Median of three runs (71 / 72 / 74). The home page had no hidden first screen to fix; its
-remaining cost is GTM, which now runs after `load` — inside the window Lighthouse counts as
-blocking time, instead of partly before the first paint.
+¹ Median of three runs (71 / 72 / 74). These runs also deferred GTM to after `load`; on the live
+site that raised blocking time from ~400 to ~700 ms without moving the LCP, so GTM was put back to
+its standard asynchronous loading (15.09.2026).
 
 What changed:
 
@@ -348,7 +348,8 @@ What changed:
 - **Priority for the LCP image** (`fetchpriority="high"`), and the first fleet cards load eagerly.
 - **Responsive WebP variants** of the site imagery (`npm run images:site`): the FAQ hero went from
   964 KiB to 27 KiB on a phone.
-- **Third-party scripts off the critical path:** analytics after `load`, reCAPTCHA on first interaction.
+- **reCAPTCHA off the critical path:** Google's script loads on the visitor's first interaction —
+  on `/book` that alone took the live mobile score from 43 to 58.
 
 ### ♿ Accessibility
 
@@ -360,14 +361,14 @@ What changed:
 
 Honest list of what Lighthouse still flags — good candidates for the next iteration:
 
-| Area                   | Finding                                                           | Suggested fix                                                                                        |
-| ---------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 📱 Mobile LCP          | 3.5–5.8 s under slow-4G emulation, now bound by the first paint   | Faster server response; split critical CSS per page                                                  |
-| 📦 Third-party JS      | GTM + the GA4 tag it loads: ~300 KiB, ~450 ms of main-thread work | Load marketing tags on first interaction (trade-off: visits without any interaction are not counted) |
-| 🖼️ Car photos in cards | Cards show the full-size upload (up to 150 KiB) in a ~350 px box  | Generate a card-size thumbnail on upload                                                             |
-| ♿ Contrast            | Breadcrumb links below 4.5:1                                      | Darken the breadcrumb colour token                                                                   |
-| ♿ Landmarks           | No `<main>` element; card headings skip a level                   | Wrap page content in `<main>`, adjust card heading level                                             |
-| 🖼️ Image sizing        | A few images lack explicit `width` / `height`                     | Add intrinsic dimensions                                                                             |
+| Area                   | Finding                                                           | Suggested fix                                                                                             |
+| ---------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 📱 Mobile LCP          | 3.5–5.8 s under slow-4G emulation, now bound by the first paint   | Faster server response; split critical CSS per page                                                       |
+| 📦 Third-party JS      | GTM + the GA4 tag it loads: ~300 KiB, ~450 ms of main-thread work | Trim unused tags in the GTM container; deferring them after `load` was tried and made blocking time worse |
+| 🖼️ Car photos in cards | Cards show the full-size upload (up to 150 KiB) in a ~350 px box  | Generate a card-size thumbnail on upload                                                                  |
+| ♿ Contrast            | Breadcrumb links below 4.5:1                                      | Darken the breadcrumb colour token                                                                        |
+| ♿ Landmarks           | No `<main>` element; card headings skip a level                   | Wrap page content in `<main>`, adjust card heading level                                                  |
+| 🖼️ Image sizing        | A few images lack explicit `width` / `height`                     | Add intrinsic dimensions                                                                                  |
 
 ---
 
