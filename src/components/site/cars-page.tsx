@@ -89,7 +89,11 @@ export function CarsPage({
         <h1 className="site-page-title t-8swvc5">{title}</h1>
       </div>
 
-      <section className="site-fleet site-reveal">
+      {/*
+        No scroll appearance here: the grid is the first screen, and a block
+        hidden until the script runs holds back the page's largest paint.
+      */}
+      <section className="site-fleet">
         <div className="site-fleet-inner">
           {cars.length === 0 ? (
             <p className="site-fleet-empty t-mvj9bv">
@@ -101,8 +105,13 @@ export function CarsPage({
             </p>
           ) : (
             <div className="site-fleet-grid">
-              {cars.map((car) => (
-                <CarCard car={car} labels={labels} key={car.slug} />
+              {cars.map((car, index) => (
+                <CarCard
+                  car={car}
+                  labels={labels}
+                  key={car.slug}
+                  priority={index === 0 ? 'high' : index < 3 ? 'eager' : 'lazy'}
+                />
               ))}
             </div>
           )}

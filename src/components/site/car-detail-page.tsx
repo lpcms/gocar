@@ -15,6 +15,7 @@ import {
 import { getCarDetailData } from '@/lib/site-car-detail';
 import type { CarSpec } from '@/lib/site-car-detail';
 import { getMediaAlt } from '@/lib/media-alt';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath, withBase } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 
@@ -79,7 +80,11 @@ export function CarDetailPage({
       <SiteHeader locale={locale} pathname={path} basePath={basePath} />
 
       <header className="site-car-hero">
-        <img className="site-car-hero-photo" src={HERO} alt={getMediaAlt(HERO, locale)} />
+        <img
+          className="site-car-hero-photo"
+          {...responsiveImage(HERO)}
+          alt={getMediaAlt(HERO, locale)}
+        />
         <div className="site-car-hero-inner">
           <Breadcrumbs
             path={bare}
@@ -93,7 +98,11 @@ export function CarDetailPage({
         </div>
       </header>
 
-      <section className="site-car-main site-reveal">
+      {/*
+        No scroll appearance here: the gallery is the first screen, and a block
+        hidden until the script runs holds back the page's largest paint.
+      */}
+      <section className="site-car-main">
         <div className="site-car-main-inner">
           <CarGallery photos={data.photos} />
 

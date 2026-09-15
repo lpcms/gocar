@@ -23,7 +23,7 @@ export function CarGallery({ photos }: { photos: CarCardData['photos'] }) {
     <div className="site-gallery">
       <div className="site-gallery-main">
         {photos.image === null || photos.image === '' ? null : (
-          <img src={photos.image} alt={photos.imageAlt} decoding="async" />
+          <img src={photos.image} alt={photos.imageAlt} fetchPriority="high" />
         )}
       </div>
       {thumbs.length === 0 ? null : (

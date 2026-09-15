@@ -16,6 +16,8 @@ node scripts/check-all.mjs      # MANDATORY before delivering anything:
 
 npm run db:init                 # create db/gocar.db from db/gocar.template.db (refuses to overwrite)
 npm run db:template             # rebuild the committed template from the live DB, minus private data
+npm run images:site             # rebuild the 640/1024/1920 WebP variants of public/images/site
+                                # (their top widths are listed in src/lib/site-images.ts)
 node scripts/create-admin.mjs <login> <password>
 node scripts/backup-db.mjs      # snapshot to backups/gocar-YYYYMMDD-HHMM.db
 

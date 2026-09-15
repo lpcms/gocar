@@ -1,5 +1,6 @@
 import { getTranslation } from '@/lib/translations';
 import { getMediaAlt } from '@/lib/media-alt';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath, withBase } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 import { SiteButton } from './button';
@@ -46,13 +47,18 @@ export function CtaBanner({
       'Book Your Adventure Today and Feel the Power of the Open Road.'
     );
   const label = button ?? getTranslation('404.cta_button', locale, 'Book Now');
-  const cardClasses =
-    align === 'end' ? 'site-cta-card site-cta-card--end' : 'site-cta-card';
+  const cardClasses = align === 'end' ? 'site-cta-card site-cta-card--end' : 'site-cta-card';
 
   return (
     <section className="site-cta">
       <div className={cardClasses}>
-        <img src="/images/site/cta-banner.png" alt={getMediaAlt('/images/site/cta-banner.png', locale)} className="site-cta-image" />
+        <img
+          {...responsiveImage('/images/site/cta-banner.png')}
+          alt={getMediaAlt('/images/site/cta-banner.png', locale)}
+          className="site-cta-image"
+          loading="lazy"
+          decoding="async"
+        />
         {kicker === undefined || kicker === '' ? null : (
           <p className="site-cta-kicker t-115u14f">{kicker}</p>
         )}

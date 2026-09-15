@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FormField } from '../form-field';
+import { getRecaptchaToken, useRecaptchaOnInteraction } from './recaptcha';
 import type { BookData } from '@/lib/site-book';
 import type { Locale } from '@/lib/site-nav';
 
@@ -157,6 +158,7 @@ export function BookForm({
   const [comment, setComment] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error' | 'invalid'>('idle');
   const [hint, setHint] = useState('');
+  useRecaptchaOnInteraction(data.recaptchaSiteKey);
   /** Fields the last refused submit pointed at, marked until they are filled. */
   const [flagged, setFlagged] = useState<string[]>([]);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -255,26 +257,11 @@ export function BookForm({
 
   /**
    * A reCAPTCHA v3 token for the submission, or an empty string when the keys
-   * are not configured or Google's script did not load: the endpoint then
-   * verifies nothing, and a visitor is never blocked from booking because a
-   * third-party script is unavailable.
+   * are not configured or Google's script is unavailable. Google's script is
+   * loaded on the visitor's first interaction, and a submission waits for it.
    */
   async function recaptchaToken(): Promise<string> {
-    const key = data.recaptchaSiteKey;
-    const grecaptcha = (window as unknown as { grecaptcha?: Grecaptcha }).grecaptcha;
-    if (key === '' || grecaptcha === undefined || typeof grecaptcha.ready !== 'function') return '';
-    return new Promise<string>((resolve) => {
-      try {
-        grecaptcha.ready(() => {
-          grecaptcha
-            .execute(key, { action: 'lead' })
-            .then(resolve)
-            .catch(() => resolve(''));
-        });
-      } catch {
-        resolve('');
-      }
-    });
+    return getRecaptchaToken(data.recaptchaSiteKey, 'lead');
   }
 
   /**
@@ -569,7 +556,11 @@ export function BookForm({
               </select>
             </FormField>
             <span className="site-book-photo">
-              <img src={photo} alt={car === null ? data.placeholderAlt : car.name} />
+              <img
+                src={photo}
+                alt={car === null ? data.placeholderAlt : car.name}
+                fetchPriority="high"
+              />
             </span>
           </div>
         </section>
@@ -874,10 +865,4 @@ export function BookForm({
       )}
     </>
   );
-}
-
-/** The slice of Google's reCAPTCHA API this island uses. */
-interface Grecaptcha {
-  ready: (callback: () => void) => void;
-  execute: (siteKey: string, options: { action: string }) => Promise<string>;
 }

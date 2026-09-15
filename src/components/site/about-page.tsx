@@ -4,6 +4,7 @@ import { Breadcrumbs } from './breadcrumbs';
 import { SiteButton } from './button';
 import { getAboutTexts } from '@/lib/site-about';
 import { getMediaAlt } from '@/lib/media-alt';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 
@@ -29,10 +30,18 @@ export function AboutPage({ locale }: { locale: Locale }) {
         <h1 className="site-page-title t-8swvc5">{texts.title}</h1>
       </div>
 
-      <section className="site-about-journey site-reveal">
+      {/*
+        No scroll appearance here: this block is the first screen, and a block
+        hidden until the script runs holds back the page's largest paint.
+      */}
+      <section className="site-about-journey">
         <div className="site-about-journey-inner">
           <div className="site-about-photo">
-            <img src="/images/site/about-hero.jpg" alt={getMediaAlt('/images/site/about-hero.jpg', locale)} />
+            <img
+              {...responsiveImage('/images/site/about-hero.jpg')}
+              alt={getMediaAlt('/images/site/about-hero.jpg', locale)}
+              fetchPriority="high"
+            />
           </div>
           <div className="site-about-journey-card">
             <div className="site-about-journey-head">
@@ -100,8 +109,10 @@ export function AboutPage({ locale }: { locale: Locale }) {
         <div className="site-about-cta-card">
           <img
             className="site-about-cta-image"
-            src="/images/site/about-cta.png"
+            {...responsiveImage('/images/site/about-cta.png')}
             alt={getMediaAlt('/images/site/about-cta.png', locale)}
+            loading="lazy"
+            decoding="async"
           />
           <p className="site-about-cta-heading">{texts.ctaHeading}</p>
           <SiteButton href={localePath('book', locale)} className="site-about-cta-button">

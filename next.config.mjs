@@ -8,6 +8,8 @@
  * available memory. Values are intentionally conservative; raise them only if
  * the host has more headroom.
  */
+import fs from 'node:fs';
+
 const nextConfig = {
   /**
    * Limit CPU-bound build parallelism (page-data collection, static
@@ -28,10 +30,15 @@ const nextConfig = {
    * The database template is opened with a runtime path, which file tracing
    * cannot see; without this a serverless deployment (Vercel) ships functions
    * that have no database to start from.
+   *
+   * Only when the file is there: an installation that has its own live
+   * database and no template (the production host) must not name a missing
+   * file here - `next build` then hangs before compiling, indefinitely
+   * (measured 15.09.2026: 54 s with the file, killed after 8 min without).
    */
-  outputFileTracingIncludes: {
-    '/**': ['./db/gocar.template.db']
-  },
+  ...(fs.existsSync(new URL('./db/gocar.template.db', import.meta.url))
+    ? { outputFileTracingIncludes: { '/**': ['./db/gocar.template.db'] } }
+    : {}),
   /**
    * Metadata in <head> for every client.
    *

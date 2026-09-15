@@ -1,5 +1,6 @@
 import { getNotFoundTexts } from '@/lib/not-found';
 import { getMediaAlt } from '@/lib/media-alt';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 import { SiteButton } from './button';
@@ -22,7 +23,12 @@ export function NotFoundHero({ locale }: { locale: Locale }) {
       </div>
       <div className="site-404-inner">
         <div className="site-404-figure">
-          <img src="/images/site/404-hero.png" alt={getMediaAlt('/images/site/404-hero.png', locale)} className="site-404-image" />
+          <img
+            {...responsiveImage('/images/site/404-hero.png')}
+            alt={getMediaAlt('/images/site/404-hero.png', locale)}
+            className="site-404-image"
+            fetchPriority="high"
+          />
           <a className="site-404-badge t-1564km0" href={localePath('cars', locale)}>
             <span className="site-404-badge-dot" aria-hidden="true" />
             <span>{texts.badge !== '' ? texts.badge : 'Booking Now!'}</span>

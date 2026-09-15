@@ -4,6 +4,7 @@ import { SiteButton } from './button';
 import { CarCard } from './car-card';
 import { ReviewsSlider } from './client/reviews-slider';
 import { getHomeData, HERO_CAR, WHY_CAR, CTA_CAR, REVIEWS_BG } from '@/lib/site-home';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 
@@ -48,7 +49,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           </div>
 
           <div className="site-home-hero-car">
-            <img src={HERO_CAR} alt={data.alts.hero} />
+            <img src={HERO_CAR} alt={data.alts.hero} fetchPriority="high" />
           </div>
 
           <nav className="site-home-hero-cats" aria-label={t.categoriesLabel}>
@@ -81,7 +82,12 @@ export function HomePage({ locale }: { locale: Locale }) {
             <p className="site-home-why-list t-mvj9bv">{t.whyText}</p>
           </div>
           <div className="site-home-why-figure">
-            <img src={WHY_CAR} alt={data.alts.why} />
+            <img
+              {...responsiveImage(WHY_CAR)}
+              alt={data.alts.why}
+              loading="lazy"
+              decoding="async"
+            />
             {data.badges.map((badge) => (
               <a
                 className={`site-home-badge site-home-badge--${badge.key}`}
@@ -161,7 +167,13 @@ export function HomePage({ locale }: { locale: Locale }) {
           <SiteButton href={localePath('book', locale)}>{t.ctaButton}</SiteButton>
           <h2 className="site-home-cta-heading t-8swvc5">{t.ctaHeading}</h2>
         </div>
-        <img className="site-home-cta-car" src={CTA_CAR} alt={data.alts.cta} />
+        <img
+          className="site-home-cta-car"
+          {...responsiveImage(CTA_CAR)}
+          alt={data.alts.cta}
+          loading="lazy"
+          decoding="async"
+        />
       </section>
 
       <SiteFooter locale={locale} pathname={path} />

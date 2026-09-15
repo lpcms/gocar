@@ -225,8 +225,9 @@ gocar/
 
 ### 🏆 Lighthouse scorecard
 
-Measured with **Lighthouse 13.4.1** on the live site [gocar.run](https://gocar.run), 15.09.2026.
-Mobile = Lighthouse's default emulation (Moto G Power, slow 4G, 4× CPU throttling).
+Measured with **Lighthouse 13.4.1** on the live site [gocar.run](https://gocar.run), 15.09.2026,
+**before** the mobile optimizations described [below](#-mobile-optimization--before--after) were
+deployed. Mobile = Lighthouse's default emulation (Moto G Power, slow 4G, 4× CPU throttling).
 
 | Page                      | ⚡ Perf. desktop | 📱 Perf. mobile | ♿ Accessibility | 🛠️ Best Practices |   🔍 SEO   |
 | ------------------------- | :--------------: | :-------------: | :--------------: | :---------------: | :--------: |
@@ -311,14 +312,43 @@ empty values never reach the markup.
 
 ### ⚡ Performance
 
-| ✅  | What                       | How                                                                                                    |
-| :-: | -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| ✅  | Zero layout shift          | CLS 0 – 0.001 on every measured page                                                                   |
-| ✅  | Self-hosted fonts          | Inter in WOFF2, split into Latin / Cyrillic subsets, `font-display: swap` — no Google Fonts round-trip |
-| ✅  | Modern images              | WebP, resized on upload by `sharp` to the limits set in Settings                                       |
-| ✅  | Lazy loading               | Below-the-fold images use `loading="lazy"` and `decoding="async"`                                      |
-| ✅  | Minimal JavaScript         | Server components; only small client islands (menu, forms, slider, FAQ) are hydrated                   |
-| ✅  | Analytics without blocking | GTM / GA4 / Meta Pixel load asynchronously; IDs are validated, an empty ID emits nothing               |
+| ✅  | What                       | How                                                                                                                        |
+| :-: | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| ✅  | Zero layout shift          | CLS 0 – 0.001 on every measured page                                                                                       |
+| ✅  | Self-hosted fonts          | Inter in WOFF2, split into Latin / Cyrillic subsets, `font-display: swap` — no Google Fonts round-trip                     |
+| ✅  | Modern images              | WebP, resized on upload by `sharp`; the large site imagery ships 640 / 1024 / 1920 px variants via `srcset`                |
+| ✅  | LCP image first            | The largest image of every page has `fetchpriority="high"`; the first-screen block is never hidden by the scroll animation |
+| ✅  | Lazy loading               | Below-the-fold images use `loading="lazy"` and `decoding="async"`                                                          |
+| ✅  | Minimal JavaScript         | Server components; only small client islands (menu, forms, slider, FAQ) are hydrated                                       |
+| ✅  | Analytics without blocking | The GTM / GA4 / Meta Pixel queues start at once, the vendor scripts load after the page's `load` event                     |
+| ✅  | reCAPTCHA on demand        | Google's script (~340 KiB) loads on the visitor's first interaction; a submission always waits for it                      |
+
+### 📱 Mobile optimization — before / after
+
+Same machine, same local production build, Lighthouse 13.4.1 mobile emulation, 15.09.2026. Single
+runs — differences within ±5 points are measurement noise.
+
+| Page            | Performance |       LCP        | Main-thread blocking |     Page weight     |
+| --------------- | :---------: | :--------------: | :------------------: | :-----------------: |
+| Fleet `/cars`   | 59 → **75** | 9.5 → **3.7 s**  |     480 → 430 ms     | 1192 → **913 KiB**  |
+| Car page        |   56 → 56   | 10.5 → **5.8 s** |     560 → 470 ms     | 1374 → **1049 KiB** |
+| Booking `/book` | 70 → **76** |   3.4 → 3.5 s    |   710 → **470 ms**   | 1088 → **638 KiB**  |
+| FAQ `/faq`      | 66 → **75** | 4.3 → **3.6 s**  |     570 → 460 ms     | 1788 → **646 KiB**  |
+| Home `/`        |  76 → 72¹   |   4.1 → 4.2 s    |     340 → 430 ms     | 1229 → **855 KiB**  |
+
+¹ Median of three runs (71 / 72 / 74). The home page had no hidden first screen to fix; its
+remaining cost is GTM, which now runs after `load` — inside the window Lighthouse counts as
+blocking time, instead of partly before the first paint.
+
+What changed:
+
+- **First screen is never hidden.** Blocks that open a page (fleet grid, car gallery, About photo) no
+  longer wait for JavaScript to fade in — on the car page that alone cut the LCP render delay from
+  0.8 s to 0.2 s.
+- **Priority for the LCP image** (`fetchpriority="high"`), and the first fleet cards load eagerly.
+- **Responsive WebP variants** of the site imagery (`npm run images:site`): the FAQ hero went from
+  964 KiB to 27 KiB on a phone.
+- **Third-party scripts off the critical path:** analytics after `load`, reCAPTCHA on first interaction.
 
 ### ♿ Accessibility
 
@@ -330,14 +360,14 @@ empty values never reach the markup.
 
 Honest list of what Lighthouse still flags — good candidates for the next iteration:
 
-| Area                   | Finding                                           | Suggested fix                                                                  |
-| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 📱 Mobile LCP          | 6–11 s under slow-4G emulation                    | `fetchpriority="high"` + preload for the hero image, responsive `srcset` sizes |
-| 🎨 Render-blocking CSS | One large stylesheet delays first paint on mobile | Split critical CSS per page                                                    |
-| 📦 Unused JavaScript   | ~360 KiB, mostly third-party tags                 | Load marketing tags after interaction                                          |
-| ♿ Contrast            | Breadcrumb links below 4.5:1                      | Darken the breadcrumb colour token                                             |
-| ♿ Landmarks           | No `<main>` element; card headings skip a level   | Wrap page content in `<main>`, adjust card heading level                       |
-| 🖼️ Image sizing        | A few images lack explicit `width` / `height`     | Add intrinsic dimensions                                                       |
+| Area                   | Finding                                                           | Suggested fix                                                                                        |
+| ---------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 📱 Mobile LCP          | 3.5–5.8 s under slow-4G emulation, now bound by the first paint   | Faster server response; split critical CSS per page                                                  |
+| 📦 Third-party JS      | GTM + the GA4 tag it loads: ~300 KiB, ~450 ms of main-thread work | Load marketing tags on first interaction (trade-off: visits without any interaction are not counted) |
+| 🖼️ Car photos in cards | Cards show the full-size upload (up to 150 KiB) in a ~350 px box  | Generate a card-size thumbnail on upload                                                             |
+| ♿ Contrast            | Breadcrumb links below 4.5:1                                      | Darken the breadcrumb colour token                                                                   |
+| ♿ Landmarks           | No `<main>` element; card headings skip a level                   | Wrap page content in `<main>`, adjust card heading level                                             |
+| 🖼️ Image sizing        | A few images lack explicit `width` / `height`                     | Add intrinsic dimensions                                                                             |
 
 ---
 

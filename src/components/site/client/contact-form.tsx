@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FormField } from '../form-field';
+import { getRecaptchaToken, useRecaptchaOnInteraction } from './recaptcha';
 import type { ContactData } from '@/lib/site-contact';
 import type { Locale } from '@/lib/site-nav';
 
@@ -25,12 +26,6 @@ type State = 'idle' | 'invalid' | 'sending' | 'sent' | 'error';
 
 /** Response shape of /api/lead. */
 type LeadResponse = { ok?: boolean; error?: string };
-
-/** The reCAPTCHA v3 object Google's script puts on the window. */
-interface Grecaptcha {
-  ready: (cb: () => void) => void;
-  execute: (key: string, options: { action: string }) => Promise<string>;
-}
 
 /**
  * The contact form.
@@ -65,30 +60,15 @@ export function ContactForm({ locale, data }: { locale: Locale; data: ContactDat
     return () => document.removeEventListener('keydown', onKey);
   }, [done]);
 
+  useRecaptchaOnInteraction(data.recaptchaSiteKey);
+
   /**
    * A reCAPTCHA v3 token for the submission, or an empty string when the keys
-   * are not configured or Google's script did not load: the endpoint then
-   * verifies nothing, and a visitor is never blocked from writing to us
-   * because a third-party script is unavailable.
+   * are not configured or Google's script is unavailable. Google's script is
+   * loaded on the visitor's first interaction, and a submission waits for it.
    */
   async function recaptchaToken(): Promise<string> {
-    const key = data.recaptchaSiteKey;
-    const grecaptcha = (window as unknown as { grecaptcha?: Grecaptcha }).grecaptcha;
-    if (key === '' || grecaptcha === undefined || typeof grecaptcha.ready !== 'function') {
-      return '';
-    }
-    return new Promise<string>((resolve) => {
-      try {
-        grecaptcha.ready(() => {
-          grecaptcha
-            .execute(key, { action: 'lead' })
-            .then(resolve)
-            .catch(() => resolve(''));
-        });
-      } catch {
-        resolve('');
-      }
-    });
+    return getRecaptchaToken(data.recaptchaSiteKey, 'lead');
   }
 
   /**

@@ -28,7 +28,11 @@ import type { Locale } from '@/lib/site-nav';
  */
 export function BookPage({ locale, carSlug = '' }: { locale: Locale; carSlug?: string }) {
   const data = getBookData(locale);
-  const title = getTranslation('book.title', locale, locale === 'ua' ? 'Забронювати авто' : 'Book a car');
+  const title = getTranslation(
+    'book.title',
+    locale,
+    locale === 'ua' ? 'Забронювати авто' : 'Book a car'
+  );
 
   return (
     <div className="site-shell">
@@ -44,14 +48,6 @@ export function BookPage({ locale, carSlug = '' }: { locale: Locale; carSlug?: s
       </section>
 
       <SiteFooter locale={locale} pathname={localePath('book', locale)} />
-
-      {data.recaptchaSiteKey === '' ? null : (
-        <script
-          async
-          defer
-          src={`https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(data.recaptchaSiteKey)}`}
-        />
-      )}
     </div>
   );
 }

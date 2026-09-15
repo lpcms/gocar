@@ -7,6 +7,7 @@ import { FaqInitial } from './client/faq-initial';
 import { getFaqGroups } from '@/lib/site-faq';
 import { getTranslation } from '@/lib/translations';
 import { getMediaAlt } from '@/lib/media-alt';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 
@@ -42,8 +43,9 @@ export function FaqPage({ locale }: { locale: Locale }) {
         </div>
         <div className="site-faq-banner">
           <img
-            src="/images/site/faq-hero.png"
+            {...responsiveImage('/images/site/faq-hero.png')}
             alt={getMediaAlt('/images/site/faq-hero.png', locale)}
+            fetchPriority="high"
           />
         </div>
       </header>
@@ -69,8 +71,10 @@ export function FaqPage({ locale }: { locale: Locale }) {
         <div className="site-faq-cta-card">
           <img
             className="site-faq-cta-image"
-            src="/images/site/faq-cta.png"
+            {...responsiveImage('/images/site/faq-cta.png')}
             alt={getMediaAlt('/images/site/faq-cta.png', locale)}
+            loading="lazy"
+            decoding="async"
           />
           <div className="site-faq-cta-text">
             <h2 className="site-faq-cta-heading t-8swvc5">{ctaHeading}</h2>

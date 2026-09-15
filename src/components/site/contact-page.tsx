@@ -4,6 +4,7 @@ import { Breadcrumbs } from './breadcrumbs';
 import { CtaBanner } from './cta-banner';
 import { ContactForm } from './client/contact-form';
 import { getContactData, HERO } from '@/lib/site-contact';
+import { responsiveImage } from '@/lib/site-images';
 import { localePath } from '@/lib/site-nav';
 import type { Locale } from '@/lib/site-nav';
 
@@ -45,7 +46,7 @@ export function ContactPage({ locale }: { locale: Locale }) {
           <h1 className="site-page-title t-8swvc5">{t.title}</h1>
         </div>
         <div className="site-contact-banner">
-          <img src={HERO} alt={data.heroAlt} />
+          <img {...responsiveImage(HERO)} alt={data.heroAlt} fetchPriority="high" />
         </div>
       </header>
 
@@ -110,14 +111,6 @@ export function ContactPage({ locale }: { locale: Locale }) {
       />
 
       <SiteFooter locale={locale} pathname={path} />
-
-      {data.recaptchaSiteKey === '' ? null : (
-        <script
-          async
-          defer
-          src={`https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(data.recaptchaSiteKey)}`}
-        />
-      )}
     </div>
   );
 }

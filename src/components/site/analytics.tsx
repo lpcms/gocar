@@ -14,9 +14,13 @@ import { getSetting } from '@/lib/settings';
  * contact forms were pushing `send_form` into a `dataLayer` no container was
  * listening to (22.08.2026).
  *
- * `afterInteractive` is not used here on purpose: the container has to be
- * present before the forms can push to `dataLayer`, and GTM's own loader is
- * already async, so it never blocks the render.
+ * Each tag is split in two. The queue - `dataLayer`, `gtag`, `fbq` - is set up
+ * inline at once, so a form can push an event at any moment and nothing is
+ * lost. The vendor script that drains the queue is requested only after the
+ * page's `load` event: the three weigh ~300 KiB and ran for up to 0.7s on a
+ * mid-range phone while the first screen was still waiting to be painted
+ * (mobile Lighthouse, 15.09.2026). A visit that ends before `load` is the only
+ * one no longer counted.
  */
 
 /** Container IDs look like GTM-XXXXXX. */
@@ -39,8 +43,21 @@ function facebookPixelId() {
 }
 
 /**
- * The head half: the GTM loader, the GA4 tag and the Facebook Pixel, each one
- * only if its ID is configured.
+ * Script text that requests `src` once the page has finished loading - at
+ * once if that has already happened.
+ */
+function afterLoad(src: string): string {
+  return (
+    `(function(w,d){function go(){var s=d.createElement('script');s.async=true;` +
+    `s.src=${JSON.stringify(src)};d.head.appendChild(s);}` +
+    `if(d.readyState==='complete'){setTimeout(go,0);}` +
+    `else{w.addEventListener('load',function(){setTimeout(go,0);});}})(window,document);`
+  );
+}
+
+/**
+ * The head half: the GTM queue, the GA4 tag and the Facebook Pixel, each one
+ * only if its ID is configured, with their vendor scripts deferred to `load`.
  */
 export function AnalyticsHead() {
   const gtmId = String(getSetting('gtm_id', '') ?? '').trim();
@@ -63,41 +80,34 @@ export function AnalyticsHead() {
           data-gocar-gtm="1"
           dangerouslySetInnerHTML={{
             __html:
-              `(function(w,d,s,l,i){w[l]=w[l]||[];` +
-              `w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});` +
-              `var f=d.getElementsByTagName(s)[0],j=d.createElement(s),` +
-              `dl=l!='dataLayer'?'&l='+l:'';j.async=true;` +
-              `j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;` +
-              `f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtm}');`
+              `window.dataLayer=window.dataLayer||[];` +
+              `window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});` +
+              afterLoad(`https://www.googletagmanager.com/gtm.js?id=${gtm}`)
           }}
         />
       )}
       {ga === '' ? null : (
-        <>
-          <script async src={`https://www.googletagmanager.com/gtag/js?id=${ga}`} />
-          <script
-            data-gocar-ga="1"
-            dangerouslySetInnerHTML={{
-              __html:
-                `window.dataLayer=window.dataLayer||[];` +
-                `function gtag(){dataLayer.push(arguments);}gtag('js',new Date());` +
-                `gtag('config','${ga}');`
-            }}
-          />
-        </>
+        <script
+          data-gocar-ga="1"
+          dangerouslySetInnerHTML={{
+            __html:
+              `window.dataLayer=window.dataLayer||[];` +
+              `function gtag(){dataLayer.push(arguments);}gtag('js',new Date());` +
+              `gtag('config','${ga}');` +
+              afterLoad(`https://www.googletagmanager.com/gtag/js?id=${ga}`)
+          }}
+        />
       )}
       {fb === '' ? null : (
         <script
           data-gocar-fbq="1"
           dangerouslySetInnerHTML={{
             __html:
-              `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){` +
+              `!function(f){if(f.fbq)return;var n=f.fbq=function(){` +
               `n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};` +
-              `if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];` +
-              `t=b.createElement(e);t.async=!0;t.src=v;` +
-              `s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}` +
-              `(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');` +
-              `fbq('init','${fb}');fbq('track','PageView');`
+              `if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];}(window);` +
+              `fbq('init','${fb}');fbq('track','PageView');` +
+              afterLoad('https://connect.facebook.net/en_US/fbevents.js')
           }}
         />
       )}

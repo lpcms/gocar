@@ -1,5 +1,16 @@
 import type { SiteCarCard, SiteCardLabels } from '@/lib/site-cars';
 
+/** Props of one car card. */
+interface CarCardProps {
+  car: SiteCarCard;
+  labels: SiteCardLabels;
+  /**
+   * How urgently the photo loads: 'high' for the card that is the page's
+   * largest paint, 'eager' for the rest of the first screen, 'lazy' below it.
+   */
+  priority?: 'high' | 'eager' | 'lazy';
+}
+
 /**
  * Car card of the fleet, popular and related grids.
  *
@@ -14,12 +25,18 @@ import type { SiteCarCard, SiteCardLabels } from '@/lib/site-cars';
  * On hover the card inverts: the panel turns accent, every text turns white
  * and the pill swaps to a white panel with accent text.
  */
-export function CarCard({ car, labels }: { car: SiteCarCard; labels: SiteCardLabels }) {
+export function CarCard({ car, labels, priority = 'lazy' }: CarCardProps) {
   return (
     <a className="site-car-card" href={car.href}>
       <span className="site-car-card-photo">
         {car.image === null ? null : (
-          <img src={car.image.src} alt={car.image.alt} loading="lazy" decoding="async" />
+          <img
+            src={car.image.src}
+            alt={car.image.alt}
+            loading={priority === 'lazy' ? 'lazy' : 'eager'}
+            fetchPriority={priority === 'high' ? 'high' : 'auto'}
+            decoding="async"
+          />
         )}
       </span>
       {/*
