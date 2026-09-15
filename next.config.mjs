@@ -33,6 +33,19 @@ const nextConfig = {
     '/**': ['./db/gocar.template.db']
   },
   /**
+   * Metadata in <head> for every client.
+   *
+   * Since 15.2 Next streams the metadata of a dynamic page for any user agent
+   * outside a short list of "HTML-limited" bots, and the streamed tags land in
+   * <body>. Browsers, Googlebot, Lighthouse / PageSpeed Insights and the SEO
+   * crawlers (Ahrefs, Semrush, Screaming Frog) therefore got the description,
+   * canonical and hreflang outside <head>, and Lighthouse scored every page 92
+   * for "Document does not have a meta description" (15.09.2026). Matching
+   * every user agent turns streaming off; generateMetadata here is a few
+   * synchronous reads, so the head costs nothing noticeable to wait for.
+   */
+  htmlLimitedBots: /.*/,
+  /**
    * SWC minification runs via WASM on this host (no native bindings due to an
    * old GLIBC); that is expected and handled by Next automatically.
    */
