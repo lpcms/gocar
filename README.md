@@ -15,6 +15,8 @@ and a full-featured admin panel.
 
 🌐 **Live:** [gocar.run](https://gocar.run)
 
+<a href="https://gocar.run"><img src="docs/screenshot.webp" alt="GoCar — home page of gocar.run" width="880"></a>
+
 </div>
 
 ---
