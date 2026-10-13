@@ -15,8 +15,7 @@ and a full-featured admin panel.
 
 🌐 **Live:** [gocar.run](https://gocar.run)
 
-<a href="https://gocar.run"><img src="docs/screenshot.webp" alt="GoCar — home page of gocar.run on desktop" width="568"></a>
-<a href="https://gocar.run"><img src="docs/screenshot-mobile.webp" alt="GoCar — home page of gocar.run on mobile" width="290"></a>
+<a href="https://gocar.run"><img src="docs/screenshot.webp" alt="GoCar — home page of gocar.run on desktop" width="65.2%"></a> <a href="https://gocar.run"><img src="docs/screenshot-mobile.webp" alt="GoCar — home page of gocar.run on mobile" width="33.3%"></a>
 
 </div>
 
